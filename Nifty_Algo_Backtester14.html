@@ -1,0 +1,343 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Algo Backtester</title>
+<style>
+:root{--bg:#f4f5f7;--pn:#fff;--tx:#14181f;--mu:#6b7380;--bd:#dde1e7;--ac:#2962ff;--up:#12905b;--dn:#d6334a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--bg:#0e1116;--pn:#171b22;--tx:#e6e9ee;--mu:#8b93a1;--bd:#2a313c;--ac:#5b8cff;--up:#26c281;--dn:#ff5d73;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--pn);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.mu{color:var(--mu)}#app{display:grid;grid-template-columns:370px 1fr;gap:12px;padding:12px;align-items:start}
+@media(max-width:900px){#app{grid-template-columns:1fr}}
+.box,section{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:10px}
+h3,h4{margin:0 0 8px;font-size:16px}main{min-width:0}
+input,select,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:5px;padding:5px 7px;min-width:0}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;padding:7px 12px}
+label{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--mu)}label input,label select{color:var(--tx);font-size:15px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.row{display:flex;gap:4px;align-items:center;margin-bottom:4px}.row>*{flex:1}.row>button{flex:0 0 auto}
+.ind{border:1px solid var(--bd);border-radius:6px;padding:6px;margin-bottom:6px}.ind .row{flex-wrap:wrap}.ind label{flex:1 1 70px}
+.rule{display:grid;grid-template-columns:1fr 130px 1fr 30px;gap:3px;margin-bottom:3px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:8px}.card small{color:var(--mu);display:block;font-size:12px}.card b{font-size:19px}
+.ch{height:300px}.tw{max-height:360px;overflow:auto}.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}
+th,td{padding:3px 8px;text-align:right;border-bottom:1px solid var(--bd)}th{position:sticky;top:0;background:var(--pn);color:var(--mu)}tr[data-i]{cursor:pointer}tr[data-i]:hover{background:var(--bg)}
+.u{color:var(--up)}.d{color:var(--dn)}
+.sl{margin-bottom:7px}.lh{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13px;color:var(--mu);margin-bottom:2px}.lh button{padding:2px 7px;font-size:13px}.lh select{padding:1px 3px;font-size:13px}
+.sl .row>input[type=range]{padding:0;height:20px;accent-color:var(--ac)}.sl .row>input[type=number]{flex:0 0 90px}
+.imp{flex:0 0 auto;flex-direction:row;border:1px solid var(--bd);border-radius:5px;padding:4px 8px;cursor:pointer;color:var(--tx);font-size:15px}.runbar{position:sticky;bottom:0;background:var(--bg);padding:6px 0;z-index:3}
+#live{margin-left:auto;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:15px}
+.rule+.sl{margin:0 0 6px 4px}.rule+input{margin-bottom:4px;width:100%}
+html,body{height:100%}
+.chips{display:flex;flex-wrap:wrap;gap:4px;max-height:64px;overflow:auto}.chip{border:1px solid var(--bd);border-radius:4px;padding:1px 6px;font-size:13px}
+#cmp:empty{display:none}#cmp section{margin:0}#cmp{max-height:75vh;overflow:auto}
+#sum.cards{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:0}.card{padding:5px 8px}.card b{font-size:17px}
+@media(min-width:901px){
+#app{display:flex;flex-direction:column;gap:8px;padding:8px}
+main{display:flex;flex-direction:column;gap:6px}
+#side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto;gap:8px;align-items:start}
+#side .box{margin:0}
+#side .box:nth-child(5){grid-column:1/-1}
+#side .box:nth-child(5) .sl{display:flex;align-items:center;gap:14px;margin:0;padding:9px 0;border-bottom:1px solid var(--bd);line-height:1.8}
+#side .box:nth-child(5) .sl .lh{flex:0 0 360px;margin:0}#side .box:nth-child(5) .sl .row{flex:1}
+#side .box:nth-child(5)>.mu{margin-top:10px}
+#side .runbar{grid-column:1/-1;position:static;padding:0}#side .runbar button{flex:0 0 auto}}
+#log:empty{display:none}#log section{margin:0}#log th{position:sticky;top:0;background:var(--bd)}
+body{font-size:17px}header{padding:12px 20px;background:linear-gradient(90deg,var(--pn),var(--bg))}header b{font-size:21px}
+.box,section{border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07)}h3,h4{font-size:20px}h4{color:var(--ac)}
+label{font-size:15px}input,select,button{padding:8px 11px;border-radius:8px;font-size:16px}button:hover{border-color:var(--ac)}button.p:hover{filter:brightness(1.12)}button.big{font-size:19px;padding:13px 16px}
+.mu{font-size:15px}.card{border-radius:12px;padding:12px}.card small{font-size:14px}.card b{font-size:24px}.lh{font-size:15px}.lh button{font-size:14px}
+th,td{padding:8px 12px;font-size:16px}#log th,th{background:var(--pn);position:sticky;top:0;z-index:1}tbody tr:nth-child(even) td,table tr:nth-child(even) td{background:rgba(127,127,127,.07)}
+#gen{order:1}#sum{order:2}#cmp{order:3}#log{order:4}#gen:empty{display:none}#gen section{margin:0}summary{cursor:pointer;margin-top:4px}.runbar{position:static}
+@media(min-width:901px){#app{display:grid;grid-template-columns:450px minmax(0,1fr);gap:16px;padding:16px;align-items:start}
+#side{display:flex;flex-direction:column;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;padding-right:4px}#side .box{margin:0 0 12px}
+#side .box:nth-child(1){order:1}#side .runbar{order:2;position:static;padding:16px}#side .box:nth-child(2){order:3}#side .box:nth-child(3){order:4}#side .box:nth-child(4){order:5}#side .box:nth-child(5){order:6;grid-column:auto}
+#side .box:nth-child(5) .sl{display:block;padding:0;border:0;margin:0 0 7px;line-height:1.45}#side .box:nth-child(5) .sl .lh{flex:initial;margin:0 0 2px}#side .box:nth-child(5) .sl .row{flex:initial}}
+</style></head><body>
+<header><b>Algo Backtester</b><span id="msg" class="mu">Load any OHLC CSV (any instrument) to begin</span><span id="live"></span><button id="thm" title="Switch light / dark theme">🌙 Dark</button></header>
+<div id="app"><aside id="side"></aside><main>
+<div id="gen"></div><div id="cmp"></div><div id="sum" class="cards"></div><div id="log"></div>
+</main></div>
+<script>
+const $=s=>document.querySelector(s),nan=n=>new Float64Array(n).fill(NaN),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const DEF={ST:{period:10,mult:3},BB:{period:20,mult:2},VWAP:{},CPR:{},PIV:{},RSI:{period:14},CCI:{period:20},WR:{period:14},SAR:{start:0.02,step:0.02,max:0.2},EMA:{period:20},SMA:{period:20},MACD:{fast:12,slow:26,sig:9}};
+const OUT={ST:["","dir"],BB:["up","mid","lo"],VWAP:[""],CPR:["pp","tc","bc"],PIV:["pp","r1","r2","r3","s1","s2","s3"],RSI:[""],CCI:[""],WR:[""],SAR:[""],EMA:[""],SMA:[""],MACD:["","sig","hist"]};
+const NAMES={ST:"Supertrend",BB:"Bollinger Bands",VWAP:"VWAP",CPR:"Central Pivot Range",PIV:"Pivot Points",RSI:"RSI",CCI:"CCI",WR:"Williams %R",SAR:"Parabolic SAR",EMA:"EMA",SMA:"SMA (Moving Average)",MACD:"MACD"};
+/* TradingView-style settings: [key,label,min,max,step] */
+const PM={ST:[["period","ATR Length",1,50,1],["mult","Factor",0.5,10,0.1]],BB:[["period","Length",5,100,1],["mult","StdDev (multiplier)",0.5,4,0.1]],RSI:[["period","RSI Length",2,50,1]],CCI:[["period","CCI Length",5,100,1]],WR:[["period","%R Length",2,50,1]],SAR:[["start","Start",0.005,0.1,0.005],["step","Increment",0.005,0.1,0.005],["max","Maximum",0.05,0.5,0.01]],EMA:[["period","Length",2,200,1]],SMA:[["period","Length",2,200,1]],MACD:[["fast","Fast Length",2,50,1],["slow","Slow Length",5,100,1],["sig","Signal Smoothing",2,30,1]]};
+/* ready-made entry/exit conditions per indicator ($ = indicator name) */
+const TP={ST:{enL:["$.dir[1]|<|0","$.dir|>|0"],exL:["$.dir|<|0"],enS:["$.dir[1]|>|0","$.dir|<|0"],exS:["$.dir|>|0"]},
+RSI:{enL:["$|xa|30"],exL:["$|>|70"],enS:["$|xb|70"],exS:["$|<|30"]},
+CCI:{enL:["$|xa|-100"],exL:["$|>|100"],enS:["$|xb|100"],exS:["$|<|-100"]},
+WR:{enL:["$|xa|-80"],exL:["$|>|-20"],enS:["$|xb|-20"],exS:["$|<|-80"]},
+BB:{enL:["close|xa|$.lo"],exL:["close|>|$.mid"],enS:["close|xb|$.up"],exS:["close|<|$.mid"]},
+SAR:{enL:["close|xa|$"],exL:["close|<|$"],enS:["close|xb|$"],exS:["close|>|$"]},
+MACD:{enL:["$|xa|$.sig"],exL:["$|xb|$.sig"],enS:["$|xb|$.sig"],exS:["$|xa|$.sig"]},
+CPR:{enL:["close|xa|$.tc"],exL:["close|<|$.pp"],enS:["close|xb|$.bc"],exS:["close|>|$.pp"]},
+PIV:{enL:["close|xa|$.r1"],exL:["close|<|$.pp"],enS:["close|xb|$.s1"],exS:["close|>|$.pp"]}};
+TP.EMA=TP.SMA=TP.VWAP={enL:["close|xa|$"],exL:["close|xb|$"],enS:["close|xb|$"],exS:["close|xa|$"]};
+const TPF={ST:{enL:["$.dir|>|0"],exL:["$.dir|<|0"],enS:["$.dir|<|0"],exS:["$.dir|>|0"]},
+RSI:{enL:["$|>|50"],exL:["$|<|50"],enS:["$|<|50"],exS:["$|>|50"]},
+CCI:{enL:["$|>|0"],exL:["$|<|0"],enS:["$|<|0"],exS:["$|>|0"]},
+WR:{enL:["$|>|-50"],exL:["$|<|-50"],enS:["$|<|-50"],exS:["$|>|-50"]},
+BB:{enL:["close|>|$.mid"],exL:["close|<|$.mid"],enS:["close|<|$.mid"],exS:["close|>|$.mid"]},
+SAR:{enL:["close|>|$"],exL:["close|<|$"],enS:["close|<|$"],exS:["close|>|$"]},
+MACD:{enL:["$|>|$.sig"],exL:["$|<|$.sig"],enS:["$|<|$.sig"],exS:["$|>|$.sig"]},
+CPR:{enL:["close|>|$.tc"],exL:["close|<|$.pp"],enS:["close|<|$.bc"],exS:["close|>|$.pp"]},
+PIV:{enL:["close|>|$.pp"],exL:["close|<|$.pp"],enS:["close|<|$.pp"],exS:["close|>|$.pp"]}};
+TPF.EMA=TPF.SMA=TPF.VWAP={enL:["close|>|$"],exL:["close|<|$"],enS:["close|<|$"],exS:["close|>|$"]};
+const tpl=(t,id,f)=>{const o={};for(const g of["enL","exL","enS","exS"])o[g]=(((f?TPF:TP)[t]||{})[g]||[]).map(z=>{const[l,op,r]=z.replace(/\$/g,id).split("|");return{l,op,r}});return o};
+const GR={enL:"▲ LONG ENTRY: buy when ALL true",exL:"▲ LONG EXIT: sell when ALL true",enS:"▼ SHORT ENTRY: sell when ALL true",exS:"▼ SHORT EXIT: buy back when ALL true"};
+const OPS=[[">",">"],["<","<"],[">=","≥"],["<=","≤"],["xa","crosses above"],["xb","crosses below"]];
+let cmbK=3,cmbStop=false,CMB=[],BC={},IC={},live=false,base=null,D=null,S=[],cur=0,R=null,win=0,eqC,eqS,pxC,pxS,ov=[],lastWin=null;
+const R_=(l,op,r)=>({l,op,r});
+const RG={};function BASE(){return{tf:5,qty:75,slT:"pts",sl:0,tpT:"pts",tp:0,trT:"pts",tr:0,tra:0,slip:0,brk:20,chg:0.01,sq:true}}
+function mkS(name,inds,rules){return{...BASE(),name,inds:inds.map(([type,id])=>({type,id,p:{...DEF[type]}})),rules:{enL:[],exL:[],enS:[],exS:[],...rules}}}
+function presets(){return["ST","RSI","BB","MACD","CPR","SAR"].map(t=>mkS(NAMES[t],[[t,t+"1"]],tpl(t,t+"1")))}
+try{S=JSON.parse(localStorage.getItem("nbt")||"[]")}catch(e){}if(!S.length)S=presets();S=S.map(s=>({...BASE(),...s}));
+let saved=JSON.stringify(S);
+const dirtyUI=()=>{const e=$("#dirty");if(e)e.textContent=JSON.stringify(S)===saved?"✓ saved":"● unsaved changes"},save=()=>dirtyUI();
+function persist(){saved=JSON.stringify(S);try{localStorage.setItem("nbt",saved)}catch(e){msg("Could not store in this browser; use Export to keep a copy")}dirtyUI()}
+window.addEventListener("beforeunload",e=>{if(JSON.stringify(S)!==saved){e.preventDefault();e.returnValue=""}});
+function exportS(){const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="strategies.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);msg("Exported "+S.length+" strategies to strategies.json")}
+async function importS(f){try{const j=JSON.parse(await f.text()),arr=(Array.isArray(j)?j:[j]).filter(x=>x&&x.inds&&x.rules).map(x=>({...BASE(),...x,rules:{enL:[],exL:[],enS:[],exS:[],...x.rules}}));if(!arr.length)throw Error("no strategies found in file");S.push(...arr);cur=S.length-arr.length;persist();render();if(live)go();msg("Imported "+arr.length+" strategies")}catch(e){msg("Import failed: "+e.message)}}
+const outs=i=>OUT[i.type].map(k=>k?i.id+"."+k:i.id);
+const msg=t=>$("#msg").textContent=t,fmt=n=>Math.round(n).toLocaleString("en-IN"),ts=t=>new Date(t*1000).toISOString().slice(0,16).replace("T"," ");
+const get=(o,p)=>p.split(".").reduce((a,k)=>a&&a[k],o);
+function setP(o,p,v){const k=p.split(".");const l=k.pop();k.reduce((a,x)=>a[x],o)[l]=v}
+/* ---------- data ---------- */
+/* generic loader: any delimiter, any column order, optional volume, many date formats */
+function pd(a,b){const s=b?a+" "+b:a;let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[T\s]+(\d{1,2}):(\d{2}))?/);if(m)return Date.UTC(+m[1],m[2]-1,+m[3],+m[4]||0,+m[5]||0)/1000;
+m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})(?:[T\s]+(\d{1,2}):(\d{2}))?/);if(m)return Date.UTC(+m[3],m[2]-1,+m[1],+m[4]||0,+m[5]||0)/1000;
+if(/^\d{9,13}$/.test(s)){const v=+s;return v>1e11?Math.floor(v/1000):v}return NaN}
+async function load(f){msg("Reading "+f.name+"…");const tx=await f.text();
+let nl=tx.indexOf("\n");if(nl<0)nl=tx.length;const hd=tx.slice(0,nl).replace(/[\r"]/g,""),dl=[",",";","\t","|"].map(d=>[d,hd.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0],H=hd.split(dl).map(x=>x.trim().toLowerCase());
+const fi=re=>H.findIndex(x=>re.test(x));let oi=fi(/^o(pen)?$/),hi=fi(/^h(igh)?$/),li=fi(/^l(ow)?$/),ci=fi(/^c(lose)?$/),vi=fi(/^vol(ume)?$/),dt=fi(/^(date\s*_?time|datetime|timestamp|date)$/),ti=-1,start=1;
+if(dt<0)dt=fi(/^time$/);
+if(oi<0||hi<0||li<0||ci<0){dt=0;oi=1;hi=2;li=3;ci=4;vi=H.length>5?5:-1;start=/^\s*\d/.test(hd)?0:1}else{if(dt<0)dt=0;if(H[dt]==="date")ti=fi(/^time$/)}
+let cnt=0;for(let q=-1;(q=tx.indexOf("\n",q+1))>=0;)cnt++;const cap=cnt+2,t=new Float64Array(cap),o=new Float64Array(cap),h=new Float64Array(cap),l=new Float64Array(cap),c=new Float64Array(cap),v=vi>=0?new Float64Array(cap):null;
+let n=0,p=start?nl+1:0,fast=null;const iso=/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/;
+while(p<tx.length){let e=tx.indexOf("\n",p);if(e<0)e=tx.length;let ln=tx.slice(p,e);p=e+1;if(ln.length<10)continue;if(ln.indexOf('"')>=0)ln=ln.replace(/"/g,"");const a=ln.split(dl);
+if(fast===null)fast=dt===0&&ti<0&&iso.test(ln);
+const tv=fast?Date.UTC(+ln.slice(0,4),+ln.slice(5,7)-1,+ln.slice(8,10),+ln.slice(11,13),+ln.slice(14,16))/1000:pd((a[dt]||"").trim(),ti>=0?(a[ti]||"").trim():""),cv=+a[ci];
+if(isNaN(tv)||isNaN(cv))continue;t[n]=tv;o[n]=+a[oi];h[n]=+a[hi];l[n]=+a[li];c[n]=cv;if(v)v[n]=+a[vi]||0;n++}
+if(n<2){msg("Could not read candles: need columns for date/time, open, high, low, close");return}
+const sl=x=>x.subarray(0,n);D={t:sl(t),o:sl(o),h:sl(h),l:sl(l),c:sl(c),v:v?sl(v):null,n};
+if(D.t[0]>D.t[n-1])for(const k of["t","o","h","l","c"].concat(v?["v"]:[]))D[k].reverse();
+const df=[],hist={};let day=-1;for(let i=0;i<n;i++){const d=Math.floor(D.t[i]/86400);if(d!==day){day=d;const m=Math.floor((D.t[i]-d*86400)/60);hist[m]=(hist[m]||0)+1}else if(df.length<5000)df.push((D.t[i]-D.t[i-1])/60)}
+df.sort((a,b)=>a-b);D.bar=df.length?Math.max(1,Math.round(df[df.length>>1])):1440;D.sess=+Object.keys(hist).sort((a,b)=>hist[b]-hist[a])[0];
+D.k=D.c[n-1]/22000;D.name=f.name;D.from=ts(D.t[0]).slice(0,10);D.to=ts(D.t[n-1]).slice(0,10);RG.from=D.from;RG.to=D.to;S.forEach(x=>{if(x.tf<D.bar||x.tf%D.bar)x.tf=D.bar});S[cur].tf=D.bar;$("#gen").innerHTML="";GINFO=null;BC={};IC={};base=null;live=true;
+msg(fmt(n)+" candles loaded from "+f.name+" ("+D.from+" → "+D.to+")");render();
+setTimeout(()=>{if(go())msg(S[cur].name+" re-run on "+f.name+": "+R.st.n+" trades · same indicators, settings and conditions")},20)}
+function lb(a,x){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;a[m]<x?lo=m+1:hi=m}return lo}
+function resample(tf,from,to){const{t,o,h,l,c,v}=D,a=lb(t,from),b=lb(t,to+86400),T=[],O=[],H=[],L=[],C=[],V=[];let key=-1e12;
+for(let i=a;i<b;i++){const d=Math.floor(t[i]/86400),m=(t[i]-d*86400)/60,k=d*1000+Math.floor((m-D.sess)/tf);
+if(k!==key){key=k;T.push(t[i]);O.push(o[i]);H.push(h[i]);L.push(l[i]);C.push(c[i]);V.push(v?v[i]:0)}else{const j=T.length-1;if(h[i]>H[j])H[j]=h[i];if(l[i]<L[j])L[j]=l[i];C[j]=c[i];if(v)V[j]+=v[i]}}
+const F=Float64Array.from.bind(Float64Array);return{t:F(T),o:F(O),h:F(H),l:F(L),c:F(C),v:F(V)}}
+/* ---------- indicators ---------- */
+function atr(B,p){const n=B.c.length,tr=new Float64Array(n),r=nan(n);let s=0;for(let i=0;i<n;i++){tr[i]=i?Math.max(B.h[i]-B.l[i],Math.abs(B.h[i]-B.c[i-1]),Math.abs(B.l[i]-B.c[i-1])):B.h[i]-B.l[i];
+if(i<p-1)s+=tr[i];else if(i===p-1){s+=tr[i];r[i]=s/p}else r[i]=(r[i-1]*(p-1)+tr[i])/p}return r}
+function prevDay(B){const n=B.t.length,ph=nan(n),pl=nan(n),pc=nan(n);let day=-1,H=0,L=0,C=0,pH=NaN,pL=NaN,pC=NaN;
+for(let i=0;i<n;i++){const d=Math.floor(B.t[i]/86400);if(d!==day){if(day>=0){pH=H;pL=L;pC=C}day=d;H=B.h[i];L=B.l[i]}else{H=Math.max(H,B.h[i]);L=Math.min(L,B.l[i])}C=B.c[i];ph[i]=pH;pl[i]=pL;pc[i]=pC}return[ph,pl,pc]}
+function calc(x,B){const n=B.c.length,p=x.p,{h,l,c}=B;
+if(x.type==="RSI"){const r=nan(n);let g=0,s=0;const P=p.period;for(let i=1;i<n;i++){const d=c[i]-c[i-1],u=d>0?d:0,v=d<0?-d:0;
+if(i<=P){g+=u;s+=v;if(i===P){g/=P;s/=P;r[i]=s?100-100/(1+g/s):100}}else{g=(g*(P-1)+u)/P;s=(s*(P-1)+v)/P;r[i]=s?100-100/(1+g/s):100}}return{"":r}}
+if(x.type==="ST"){const A=atr(B,p.period),line=nan(n),dir=nan(n);let up=0,dn=0,tr=1;
+for(let i=0;i<n;i++){if(isNaN(A[i]))continue;const hl=(h[i]+l[i])/2;let u=hl-p.mult*A[i],d=hl+p.mult*A[i];
+if(i>0&&!isNaN(A[i-1])){if(c[i-1]>up)u=Math.max(u,up);if(c[i-1]<dn)d=Math.min(d,dn);if(tr===-1&&c[i]>dn)tr=1;else if(tr===1&&c[i]<up)tr=-1}
+up=u;dn=d;line[i]=tr===1?u:d;dir[i]=tr}return{"":line,dir}}
+if(x.type==="BB"){const P=p.period,U=nan(n),M=nan(n),Lo=nan(n);for(let i=P-1;i<n;i++){let s=0,v=0;for(let j=i-P+1;j<=i;j++)s+=c[j];const m=s/P;for(let j=i-P+1;j<=i;j++)v+=(c[j]-m)**2;const sd=Math.sqrt(v/P);M[i]=m;U[i]=m+p.mult*sd;Lo[i]=m-p.mult*sd}return{up:U,mid:M,lo:Lo}}
+if(x.type==="CCI"){const P=p.period,r=nan(n),tp=new Float64Array(n);for(let i=0;i<n;i++)tp[i]=(h[i]+l[i]+c[i])/3;
+for(let i=P-1;i<n;i++){let s=0,v=0;for(let j=i-P+1;j<=i;j++)s+=tp[j];const m=s/P;for(let j=i-P+1;j<=i;j++)v+=Math.abs(tp[j]-m);r[i]=v?(tp[i]-m)/(0.015*v/P):0}return{"":r}}
+if(x.type==="WR"){const P=p.period,r=nan(n);for(let i=P-1;i<n;i++){let hh=-1e18,ll=1e18;for(let j=i-P+1;j<=i;j++){if(h[j]>hh)hh=h[j];if(l[j]<ll)ll=l[j]}r[i]=hh>ll?(hh-c[i])/(hh-ll)*-100:-50}return{"":r}}
+if(x.type==="SAR"){const r=nan(n),st=p.step,mx=p.max,s0=p.start||st;if(n<3)return{"":r};let bull=c[1]>=c[0],ep=bull?h[1]:l[1],s=bull?l[0]:h[0],af=s0;r[1]=s;
+for(let i=2;i<n;i++){s=s+af*(ep-s);if(bull){s=Math.min(s,l[i-1],l[i-2]);if(l[i]<s){bull=false;s=ep;ep=l[i];af=s0}else if(h[i]>ep){ep=h[i];af=Math.min(af+st,mx)}}
+else{s=Math.max(s,h[i-1],h[i-2]);if(h[i]>s){bull=true;s=ep;ep=h[i];af=s0}else if(l[i]<ep){ep=l[i];af=Math.min(af+st,mx)}}r[i]=s}return{"":r}}
+if(x.type==="VWAP"){const r=nan(n),hv=B.v&&B.v.some(z=>z>0);let day=-1,s=0,k=0;for(let i=0;i<n;i++){const d=Math.floor(B.t[i]/86400);if(d!==day){day=d;s=0;k=0}const w=hv?B.v[i]:1;s+=(h[i]+l[i]+c[i])/3*w;k+=w;r[i]=k?s/k:c[i]}return{"":r}}
+const ema=(a,P,k=2/(P+1))=>{const r=nan(a.length);let e=0,c=0,s=0;for(let i=0;i<a.length;i++){if(isNaN(a[i]))continue;c++;if(c<P){s+=a[i];continue}if(c===P){s+=a[i];e=s/P}else e=a[i]*k+e*(1-k);r[i]=e}return r};
+if(x.type==="EMA")return{"":ema(c,p.period)};
+if(x.type==="SMA"){const r=nan(n),P=p.period;let s=0;for(let i=0;i<n;i++){s+=c[i];if(i>=P)s-=c[i-P];if(i>=P-1)r[i]=s/P}return{"":r}}
+if(x.type==="MACD"){const f=ema(c,p.fast),sl=ema(c,p.slow),m=nan(n),hi=nan(n);for(let i=0;i<n;i++)m[i]=f[i]-sl[i];const sg=ema(m,p.sig);for(let i=0;i<n;i++)hi[i]=m[i]-sg[i];return{"":m,sig:sg,hist:hi}}
+const[H,L,C]=prevDay(B),P=nan(n),a={},K=k=>a[k]=nan(n);
+if(x.type==="CPR"){const pp=K("pp"),tc=K("tc"),bc=K("bc");for(let i=0;i<n;i++){const q=(H[i]+L[i]+C[i])/3,b=(H[i]+L[i])/2,t=2*q-b;pp[i]=q;tc[i]=Math.max(t,b);bc[i]=Math.min(t,b)}return a}
+const pp=K("pp"),r1=K("r1"),r2=K("r2"),r3=K("r3"),s1=K("s1"),s2=K("s2"),s3=K("s3");
+for(let i=0;i<n;i++){const q=(H[i]+L[i]+C[i])/3,g=H[i]-L[i];pp[i]=q;r1[i]=2*q-L[i];s1[i]=2*q-H[i];r2[i]=q+g;s2[i]=q-g;r3[i]=H[i]+2*(q-L[i]);s3[i]=L[i]-2*(H[i]-q)}return a}
+/* ---------- rule engine ---------- */
+function tok(s,ser){s=String(s).trim();if(s!==""&&!isNaN(+s)){const v=+s;return{g:()=>v}}const m=s.match(/^([\w.]+)(?:\[(\d+)\])?$/);if(!m||!ser[m[1]])throw Error("Unknown series “"+s+"”");const a=ser[m[1]],o=+(m[2]||0);return{g:i=>i-o>=0?a[i-o]:NaN}}
+function compile(r,ser){const L=tok(r.l,ser),Rr=tok(r.r,ser),op=r.op;return i=>{const a=L.g(i),b=Rr.g(i);
+if(op===">")return a>b;if(op==="<")return a<b;if(op===">=")return a>=b;if(op==="<=")return a<=b;const pa=L.g(i-1),pb=Rr.g(i-1);return op==="xa"?pa<=pb&&a>b:pa>=pb&&a<b}}
+function backtest(s){if(Object.keys(BC).length>5)BC={};const TF=Math.max(s.tf,D.bar||1);const from=Date.parse(s.from||$("#from").value)/1000,to=Date.parse(s.to||$("#to").value)/1000,bk=TF+"|"+from+"|"+to,B=BC[bk]||(BC[bk]=resample(TF,from,to)),n=B.t.length,ser={open:B.o,high:B.h,low:B.l,close:B.c};
+if(Object.keys(IC).length>40)IC={};s.inds.forEach(x=>{const ik=bk+JSON.stringify([x.type,x.p]),r=IC[ik]||(IC[ik]=calc(x,B));for(const k in r)ser[k?x.id+"."+k:x.id]=r[k]});
+const ru={};for(const k in GR)ru[k]=s.rules[k].filter(r=>String(r.l).trim()&&String(r.r).trim()).map(r=>compile(r,ser));
+const all=(f,i)=>f.length>0&&f.every(g=>g(i)),day=i=>Math.floor(B.t[i]/86400),trades=[];if(!ru.enL.length&&!ru.enS.length)throw Error("Add at least one entry condition (long or short) before running");
+let pos=0,ep=0,ei=0,pend=null,best=0;const dist=(t,v,r)=>t==="pct"?r*v/100:v,sp=+s.slip||0;
+const close=(i,px,why,tg)=>{const xp=px-pos*sp,pts=pos*(xp-ep),chg=2*(+s.brk||0)+(+s.chg||0)/100*(ep+xp)*s.qty;trades.push({tg,side:pos,ei,xi:i,eT:B.t[ei],xT:B.t[i],ep,xp,why,pts,chg,net:pts*s.qty-chg});pos=0};
+for(let i=0;i<n;i++){
+if(pend){if(pos)close(i,B.o[i],"Signal");if(pend!=="X"){pos=pend==="L"?1:-1;ep=B.o[i]+pos*sp;ei=i;best=ep}pend=null}
+if(pos){const sd=dist(s.slT,s.sl,ep),td=dist(s.tpT,s.tp,ep),rd=dist(s.trT,s.tr,ep),ad=dist(s.trT,s.tra,ep);let stop=s.sl>0?ep-pos*sd:NaN,why="Stop loss";
+if(s.tr>0&&(best-ep)*pos>=ad){const tl=best-pos*rd;if(isNaN(stop)||(tl-stop)*pos>0){stop=tl;why="Trailing stop"}}
+const tp=s.tp>0?ep+pos*td:NaN,hs=!isNaN(stop)&&(pos>0?B.l[i]<=stop:B.h[i]>=stop),ht=!isNaN(tp)&&(pos>0?B.h[i]>=tp:B.l[i]<=tp);
+if(hs)close(i,pos>0?Math.min(stop,B.o[i]):Math.max(stop,B.o[i]),why,stop);else if(ht)close(i,tp,"Target",tp);else best=pos>0?Math.max(best,B.h[i]):Math.min(best,B.l[i])}
+if(s.sq&&D.bar<1440&&(i===n-1||day(i+1)!==day(i))){if(pos)close(i,B.c[i],"EOD square-off");continue}
+const eL=all(ru.enL,i),eS=all(ru.enS,i);
+if(pos>0){if(eS)pend="S";else if(all(ru.exL,i))pend="X"}else if(pos<0){if(eL)pend="L";else if(all(ru.exS,i))pend="X"}else{if(eL)pend="L";else if(eS)pend="S"}}
+if(pos)close(n-1,B.c[n-1],"End of data");return{B,ser,trades,st:stats(trades,s.qty),s}}
+function stats(tr,q){let eq=0,pk=0,dd=0,w=0,gw=0,gl=0,lp=0,sp=0,b=-1e18,wo=1e18;const cum=[];
+for(const x of tr){const p=x.net;eq+=p;cum.push(eq);if(eq>pk)pk=eq;dd=Math.max(dd,pk-eq);if(p>0){w++;gw+=p}else gl-=p;if(x.side>0)lp+=p;else sp+=p;b=Math.max(b,p);wo=Math.min(wo,p)}
+const n=tr.length;return{n,net:eq,fees:tr.reduce((a,x)=>a+x.chg,0),pts:tr.reduce((a,x)=>a+x.pts,0),wr:n?w/n*100:0,pf:gl?gw/gl:gw?Infinity:0,dd,lp,sp,best:n?b:0,worst:n?wo:0,aw:w?gw/w:0,al:n-w?gl/(n-w):0,cum}}
+/* ---------- UI ---------- */
+/* ---------- UI ---------- */
+const rf=(r,id)=>new RegExp("\\b"+id+"\\b").test(r.l+" "+r.r);
+const snames=s=>["open","high","low","close"].concat(...s.inds.map(outs)),isNum=v=>String(v).trim()!==""&&!isNaN(+v);
+function fld(s,l,p,type="number",x=""){const v=get(s,p);return`<label>${l}<input data-p="${p}" ${type==="number"?'data-n="1" step="any"':""} type="${type}" ${type==="checkbox"?(v?"checked":""):`value="${esc(v)}"`} ${x}></label>`}
+/* slider + number box; sw=1 adds a "find best" scan button */
+function sld(l,p,v,mn,mx,st,sw,ex=""){v=+v||0;const a=mn,b=mx;mn=Math.min(mn,v);mx=Math.max(mx,v);
+return`<div class="sl"><div class="lh"><span>${l}</span><span>${ex}${sw?`<button data-a="best" data-p="${p}" data-sw="${a},${b},${st}" title="Try every value in this range and keep the one with the best net P&L">🔍 find best</button>`:""}</span></div><div class="row" style="margin:0"><input type="range" data-p="${p}" data-n="1" min="${mn}" max="${mx}" step="${st}" value="${v}"><input type="number" data-p="${p}" data-n="1" step="${st}" value="${v}"></div></div>`}
+const unit=(s,t)=>`<select data-p="${t}" data-r="1"><option value="pts" ${s[t]==="pts"?"selected":""}>pts</option><option value="pct" ${s[t]==="pct"?"selected":""}>%</option></select>`;
+const kx=()=>D&&D.k?D.k:1,nice=x=>Number(x.toPrecision(2)),stp=m=>Math.max(0.01,Number((m/300).toPrecision(1)));
+const rkb=(s,l,v,t,mx,u)=>{const pc=s[t]==="pct",m=pc?mx/60:nice(mx*kx());return sld(l,v,s[v],0,m,pc?0.05:stp(m),1,u?unit(s,t):"")};
+function rngOf(n){const b=String(n).replace(/\[\d+\]$/,""),x=S[cur].inds.find(z=>b===z.id||b.startsWith(z.id+".")),t=x&&x.type;
+if(/\.dir$/.test(b))return[-1,1,1];if(t==="RSI")return[0,100,1];if(t==="WR")return[-100,0,1];if(t==="CCI")return[-300,300,5];if(t==="MACD")return[-200,200,1];
+if(!D)return null;if(D.pmn==null){let a=1e18,m=0;for(let i=0;i<D.n;i++){if(D.c[i]<a)a=D.c[i];if(D.c[i]>m)m=D.c[i]}D.pmn=Math.floor(a);D.pmx=Math.ceil(m)}return[D.pmn,D.pmx,1]}
+const dflt=n=>{const g=rngOf(n);return g?(g[1]-g[0]>2000&&D?String(Math.round(D.c[D.n-1])):String(Math.round((g[0]+g[1])/2))):"0"};
+const sopt=(v,L,num)=>{const nv=isNum(v),ok=nv||L.includes(v)||!String(v);return(num?`<option value="#" ${nv?"selected":""}>＃ Number (slider)</option>`:"")+(ok?"":`<option value="${esc(v)}" selected>⚠ ${esc(v)}</option>`)+L.map(n=>`<option value="${n}" ${n===v?"selected":""}>${n}</option>`).join("")};
+function rl(g,r,i,L){const P=`rules.${g}.${i}.`,n=isNum(r.r),rg=rngOf(r.l);return`<div class="rule"><select data-p="${P}l" data-r="1">${sopt(r.l,L,0)}</select><select data-p="${P}op">${OPS.map(([v,t])=>`<option value="${v}" ${v===r.op?"selected":""}>${t}</option>`).join("")}</select><select data-rt="${g}.${i}">${sopt(r.r,L,1)}</select><button data-a="rmr" data-g="${g}" data-i="${i}">✕</button></div>`+(n?(rg?sld("Value",P+"r",r.r,rg[0],rg[1],rg[2],1):`<input data-p="${P}r" data-n="1" type="number" step="any" value="${esc(r.r)}">`):"")}
+function render(){const s=S[cur],L=snames(s).flatMap(n=>[n,n+"[1]"]);
+$("#side").innerHTML=`<div class="box"><h4>1 · Data</h4><input type="file" id="file" accept=".csv"><div class="mu" style="margin-top:4px">${D?esc(D.name)+"<br>"+fmt(D.n)+" candles · "+D.from+" → "+D.to+" · "+(D.bar>=1440?"daily":D.bar+"-min")+" data":"Any OHLC CSV: date/time, open, high, low, close (volume optional). Any instrument. Loading new data re-runs the same strategy automatically."}</div></div>
+<div class="box"><h4>3 · Strategy</h4><div class="row"><select id="sel">${S.map((x,i)=>`<option value="${i}" ${i===cur?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
+<div class="row"><button data-a="new" title="Start a fresh empty strategy">＋ New</button><button data-a="dup" title="Copy this strategy">⧉ Clone</button><button data-a="save" class="p" title="Save this strategy and its settings">💾 Save</button><button data-a="del" title="Delete this strategy">🗑 Delete</button></div>
+<div class="row"><button data-a="exp" title="Download all strategies as a file">⬇ Export</button><label class="imp">⬆ Import<input type="file" id="imp" accept=".json" hidden></label><span id="dirty" class="mu" style="flex:1 1 auto"></span></div>
+<div class="g">${fld(s,"Name","name","text")}<label>Timeframe<select data-p="tf" data-n="1">${[[1,"1 min"],[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"],[60,"1 hour"],[240,"4 hour"],[1440,"1 day"]].filter(x=>x[0]>=(D?D.bar:1)&&x[0]%(D?D.bar:1)===0).map(([v,t])=>`<option value="${v}" ${v===Math.max(s.tf,D?D.bar:1)?"selected":""}>${t}</option>`).join("")}</select></label>
+<label>From<input type="date" id="from" value="${RG.from||(D?D.from:"")}"></label><label>To<input type="date" id="to" value="${RG.to||(D?D.to:"")}"></label></div>${sld("Quantity (units)","qty",s.qty,1,5000,1)}<div class="g">${fld(s,"Square off at day end","sq","checkbox")}</div></div>
+<div class="box"><h4>4 · Indicators <span class="mu">(this strategy only)</span></h4>${s.inds.map((x,i)=>`<div class="ind"><div class="row"><select data-ty="${i}">${Object.keys(NAMES).map(k=>`<option value="${k}" ${k===x.type?"selected":""}>${NAMES[k]}</option>`).join("")}</select><span class="mu" style="flex:0 0 auto">${x.id}</span><button data-a="tpl" data-i="${i}" title="Add ready-made entry/exit conditions for this indicator">+ conditions</button><button data-a="rmi" data-i="${i}">✕</button></div>
+${(PM[x.type]||[]).map(([k,l,mn,mx,st])=>sld(l,`inds.${i}.p.${k}`,x.p[k],mn,mx,st,1)).join("")||'<div class="mu">No settings: uses prior-day levels / session data</div>'}<div class="mu">Use in conditions as: ${outs(x).join(", ")}</div></div>`).join("")||'<div class="mu">No indicator yet. Add one below, or build conditions on price only.</div>'}
+<div class="row"><select id="addt">${Object.keys(NAMES).map(k=>`<option value="${k}">${NAMES[k]}</option>`).join("")}</select><button data-a="addi">Add</button></div>
+<div class="mu">${D&&D.v?"VWAP uses the volume column of your file.":"No volume column in this file, so VWAP is an equal-weight session average of (H+L+C)/3."}</div></div>
+<div class="box"><h4>5 · Entry &amp; exit conditions</h4><div class="mu" style="margin-bottom:6px">Pick price or an indicator output, an operator, then another series or a number (shows a slider). “[1]” means previous candle. All conditions in a block must be true. A position also closes on opposite signal, stop loss, target, trailing stop or day-end.</div>
+${Object.keys(GR).map(g=>`<b>${GR[g]}</b><div style="margin:4px 0 8px">${s.rules[g].map((r,i)=>rl(g,r,i,L)).join("")}<button data-a="addr" data-g="${g}">+ condition</button></div>`).join("")}</div>
+<div class="box"><h4>6 · Risk &amp; costs <span class="mu">(0 = off)</span></h4>${rkb(s,"Stop loss","sl","slT",300,1)}${rkb(s,"Target","tp","tpT",600,1)}${rkb(s,"Trailing stop distance","tr","trT",300,1)}${rkb(s,"Trail starts after profit","tra","trT",300,0)}${sld("Slippage (pts per fill)","slip",s.slip,0,nice(5*kx()),Math.max(0.01,Number((nice(5*kx())/100).toPrecision(1))))}${sld("Brokerage (₹ per order)","brk",s.brk,0,100,1)}${sld("Other charges (% of turnover)","chg",s.chg,0,0.2,0.005)}<div class="mu">Slippage hurts on every entry and exit; brokerage is charged on both orders; other charges stand in for STT, exchange fees, GST and stamp duty. Stops fill at the open if price gaps through, and the stop is checked before the target.</div></div>
+<div class="runbar box"><h4>2 · Find best strategies</h4><button class="p big" data-a="pipe" style="width:100%">🚀 Find best strategies</button><div class="mu" style="margin:8px 0">One flow: tests every indicator combination, tunes settings, stops, slippage and timeframe for your drawdown band, then double-checks on unseen dates.</div><div class="row"><button class="p" data-a="run">▶ Run backtest</button><button data-a="all">Compare all strategies</button></div><details><summary class="mu">More tools</summary><div class="row" style="margin-top:6px"><button data-a="combo" title="Try every combination of indicators at default settings and rank them">🧪 Combinations only</button><select id="cmbn" style="flex:0 0 auto" title="Maximum number of indicators in a combination"><option value="2" ${cmbK===2?"selected":""}>up to 2 indicators</option><option value="3" ${cmbK===3?"selected":""}>up to 3 indicators</option><option value="4" ${cmbK===4?"selected":""}>up to 4 indicators</option></select></div></details></div>`;dirtyUI()}
+let busy=0;const sched=()=>{if(!live||busy)return;busy=1;requestAnimationFrame(()=>{busy=0;go(true)})};
+function go(fast){if(!D)return false;try{R=backtest(S[cur]);show(R,fast);upd();return true}catch(e){msg("Error: "+e.message);return false}}
+function upd(){const x=R.st;if(base==null)base=x.net;const d=x.net-base;$("#live").innerHTML=`<b class="${x.net>=0?"u":"d"}" style="font-size:18px">Net ₹ ${fmt(x.net)}</b><span class="${d>=0?"u":"d"}" title="change since you started adjusting">${d>=0?"▲ +":"▼ −"}${fmt(Math.abs(d))}</span><span class="mu">${x.n} trades · win ${x.wr.toFixed(0)}% · PF ${x.pf===Infinity?"∞":x.pf.toFixed(2)} · max DD ${fmt(x.dd)}</span>`}
+$("#side").addEventListener("input",e=>{const t=e.target,p=t.dataset.p;if(t.id==="from"||t.id==="to")RG[t.id]=t.value;if(!p)return;setP(S[cur],p,t.type==="checkbox"?t.checked:t.dataset.n?parseFloat(t.value)||0:t.value);
+if(t.type==="range"||t.type==="number")document.querySelectorAll('#side [data-p="'+p+'"]').forEach(o=>{if(o!==t)o.value=t.value});save();sched()});
+$("#side").addEventListener("change",e=>{const t=e.target,s=S[cur];if(t.id==="file"&&t.files[0])return load(t.files[0]);if(t.id==="imp"&&t.files[0])return importS(t.files[0]);if(t.id==="cmbn"){cmbK=+t.value;return}if(t.dataset.p==="name"){render();return}
+if(t.id==="sel"){cur=+t.value;base=null;render();if(live)go();return}
+if(t.dataset.ty!==undefined){const x=s.inds[+t.dataset.ty],old=x.id,ty=t.value;let k=1;while(s.inds.some(z=>z.id===ty+k))k++;x.type=ty;x.id=ty+k;x.p={...DEF[ty]};
+for(const g in s.rules)s.rules[g]=s.rules[g].filter(r=>!rf(r,old));const T=tpl(ty,x.id,Object.values(s.rules).some(r=>r.length));for(const g in T)s.rules[g].push(...T[g]);save();render();if(live)go();return}
+if(t.dataset.rt){const[g,i]=t.dataset.rt.split("."),r=s.rules[g][+i];r.r=t.value==="#"?dflt(r.l):t.value;save();render();if(live)go();return}
+if(t.dataset.r!==undefined)render();if(live)go()});
+const rb=e=>{if(R&&e.target.matches&&e.target.matches("input[type=range],input[type=number]"))base=R.st.net};$("#side").addEventListener("pointerdown",rb);$("#side").addEventListener("focusin",rb);
+$("#side").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const a=b.dataset.a,s=S[cur],i=+b.dataset.i,g=b.dataset.g;
+if(a==="gen"||a==="pipe")return genOpen();if(a==="run")return run();if(a==="all")return runAll();if(a==="best")return best(b);if(a==="exp")return exportS();if(a==="combo")return runCombos();if(a==="save"){persist();msg("Saved “"+s.name+"” with its indicators, settings and conditions");return}
+if(a==="new"){S.push(mkS("Strategy "+(S.length+1),[],{}));cur=S.length-1;base=null}else if(a==="dup"){const c=JSON.parse(JSON.stringify(s));c.name+=" copy";S.push(c);cur=S.length-1}
+else if(a==="del"&&S.length>1){S.splice(cur,1);cur=0;base=null}else if(a==="rmi"){const id=s.inds[i].id;s.inds.splice(i,1);for(const g in s.rules)s.rules[g]=s.rules[g].filter(r=>!rf(r,id))}
+else if(a==="addi"){const t=$("#addt").value;let k=1;while(s.inds.some(x=>x.id===t+k))k++;const id=t+k;s.inds.push({type:t,id,p:{...DEF[t]}});const T=tpl(t,id,Object.values(s.rules).some(r=>r.length));for(const g in T)s.rules[g].push(...T[g]);if(D)live=true}
+else if(a==="tpl"){const x=s.inds[i],T=tpl(x.type,x.id,Object.values(s.rules).some(r=>r.length));for(const k in T)s.rules[k].push(...T[k])}
+else if(a==="addr")s.rules[g].push(R_("close",">",dflt("close")));else if(a==="rmr")s.rules[g].splice(i,1);
+(a==="new"||a==="dup"||a==="del"?persist:save)();render();if(live)go()});
+function guard(){if(!D){msg("Load the CSV first");return false}return true}
+function run(){if(!guard())return;live=true;msg("Running…");setTimeout(()=>{base=null;if(go())msg(S[cur].name+": "+R.st.n+" trades · live mode ON: move any slider and P&L updates instantly")},20)}
+/* scan every value of one setting, keep the best */
+function best(b){if(!guard())return;const s=S[cur],p=b.dataset.p,[mn,mx,st]=b.dataset.sw.split(",").map(Number),orig=get(s,p),lbl=b.closest(".sl").querySelector(".lh span").textContent,k=Math.max(1,Math.ceil((mx-mn)/st/80))*st,vals=[];
+for(let v=mn;v<=mx+1e-9;v+=k)vals.push(+v.toFixed(6));msg("Scanning "+vals.length+" values of "+lbl+"…");
+setTimeout(()=>{let bv=orig,bn=-1e18;const rows=[];try{for(const v of vals){setP(s,p,v);const r=backtest(s);rows.push([v,r.st.net]);if(r.st.net>bn){bn=r.st.net;bv=v}}}catch(e){setP(s,p,orig);msg("Error: "+e.message);return}
+setP(s,p,bv);save();live=true;base=null;render();go();
+$("#cmp").innerHTML=`<section><h3>Scan of “${esc(lbl)}”: net P&amp;L (₹) for each value <span class="mu">· best is now applied. Past results do not guarantee future ones, so prefer a value where neighbours also profit.</span></h3><div class="chips">${rows.map(r=>`<span class="chip ${r[1]>=0?"u":"d"}">${r[0]}: ₹${fmt(r[1])}</span>`).join("")}</div></section>`;
+msg(lbl+" = "+bv+" gives the best net P&L: ₹"+fmt(bn))},20)}
+function runAll(){if(!guard())return;msg("Running all strategies…");setTimeout(()=>{try{const rows=S.map(s=>{const r=backtest(s);return`<tr><td style="text-align:left">${esc(s.name)}</td><td>${s.tf}m</td><td>${r.st.n}</td><td>${r.st.wr.toFixed(1)}%</td><td>${r.st.pf===Infinity?"∞":r.st.pf.toFixed(2)}</td><td>${fmt(r.st.dd)}</td><td class="${r.st.net>=0?"u":"d"}">${fmt(r.st.net)}</td></tr>`}).join("");
+$("#cmp").innerHTML=`<section><h3>Strategy comparison (net P&amp;L in ₹)</h3><div class="sc"><table><tr><th style="text-align:left">Strategy</th><th>TF</th><th>Trades</th><th>Win %</th><th>PF</th><th>Max DD</th><th>Net ₹</th></tr>${rows}</table></div></section>`;msg("Comparison done")}catch(e){msg("Error: "+e.message)}},20)}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function show(r,fast){const q=r.s.qty,x=r.st,c=(k,v,cl="")=>`<div class="card"><small>${k}</small><b class="${cl}">${v}</b></div>`,pn=v=>v>=0?"u":"d";
+$("#sum").innerHTML=c("Net P&L after costs (₹)",fmt(x.net),pn(x.net))+c("Net points",fmt(x.pts),pn(x.pts))+c("Trades",x.n)+c("Win rate",x.wr.toFixed(1)+"%")+c("Profit factor",x.pf===Infinity?"∞":x.pf.toFixed(2))+c("Max drawdown (₹)",fmt(x.dd),"d")+c("Avg win / loss (₹)",fmt(x.aw)+" / "+fmt(x.al))+c("Best / worst (₹)",fmt(x.best)+" / "+fmt(x.worst))+c("Long P&L (₹)",fmt(x.lp),pn(x.lp))+c("Short P&L (₹)",fmt(x.sp),pn(x.sp))+c("Total charges (₹)",fmt(x.fees),"d");clearTimeout(logT);LN=300;if(fast)logT=setTimeout(()=>showLog(r),500);else showLog(r)}
+/* ---------- best indicator combination ---------- */
+function allCombos(maxK){const T=Object.keys(NAMES),out=[],rec=(st,c)=>{for(const tr of c)out.push([tr,c.slice()]);if(c.length===maxK)return;for(let i=st;i<T.length;i++)rec(i+1,[...c,T[i]])};rec(0,[]);return out}
+function mkCombo(ids,tr,base){const s=JSON.parse(JSON.stringify(base)),o=[tr,...ids.filter(x=>x!==tr)],R={enL:[],exL:[],enS:[],exS:[]};
+s.inds=o.map(t=>({type:t,id:t+"1",p:{...DEF[t]}}));o.forEach((t,k)=>{const T=tpl(t,t+"1",k>0);for(const g in R)R[g].push(...T[g])});s.rules=R;s.name="Combo: "+o.join(" + ");return s}
+function runCombos(){if(!guard())return;const base=S[cur],list=allCombos(cmbK),res=[],N=list.length;let i=0;cmbStop=false;
+const step=()=>{const t1=performance.now();while(i<N&&!cmbStop&&performance.now()-t1<40){const[tr,ids]=list[i++];try{const s=mkCombo(ids,tr,base),r=backtest(s);res.push({s,n:r.st.n,net:r.st.net,dd:r.st.dd,wr:r.st.wr,pf:r.st.pf})}catch(e){}}
+if(i<N&&!cmbStop){$("#cmp").innerHTML=`<section><h3>Testing indicator combinations ${i} / ${N}…</h3><div style="height:8px;background:var(--bd);border-radius:4px"><div style="height:8px;width:${(i/N*100).toFixed(1)}%;background:var(--ac);border-radius:4px"></div></div><button data-a="cstop" style="margin-top:8px">■ Stop and show best so far</button></section>`;msg("Testing combinations "+i+" / "+N);setTimeout(step,0)}else showCombos(res,i,N)};
+msg("Testing "+N+" combinations…");setTimeout(step,20)}
+function showCombos(res,i,N){const ok=res.filter(r=>r.n>=10&&r.net>0).sort((a,b)=>b.net/(b.dd||1)-a.net/(a.dd||1)||b.net-a.net||a.s.inds.length-b.s.inds.length),seen=new Set(),top=(ok.length?ok:res.slice().sort((a,b)=>b.net-a.net)).filter(r=>{const k=r.n+"|"+Math.round(r.net)+"|"+Math.round(r.dd);if(seen.has(k))return false;seen.add(k);return true}).slice(0,10);CMB=top;
+const cl=v=>v>=0?"u":"d";
+$("#cmp").innerHTML=`<section><h3>Best indicator combinations on this data <span class="mu">· ${i} of ${N} tested${i<N?" (stopped early)":""}</span></h3>
+<div class="mu" style="margin-bottom:6px">${ok.length?"Ranked by profit relative to worst drawdown (Net ÷ Max DD), only combinations that are profitable with at least 10 trades.":"No combination was profitable with at least 10 trades; showing the least bad by net P&L."} Combinations that give identical results are listed once, with the simplest one first. Each uses the standard default settings of its indicators (first one triggers, the others must also agree), plus your timeframe, risk and costs. “Apply” makes it a new strategy so you can fine-tune it with 🔍 find best. Past results do not guarantee future ones.</div>
+<div class="sc"><table><tr><th>#</th><th style="text-align:left">Combination (all must agree)</th><th>Trades</th><th>Win %</th><th>PF</th><th>Net ₹</th><th>Max DD ₹</th><th>Net ÷ DD</th><th></th></tr>${top.map((r,k)=>`<tr><td>${k+1}</td><td style="text-align:left">${esc(r.s.name.slice(7))}</td><td>${r.n}</td><td>${r.wr.toFixed(0)}%</td><td>${r.pf===Infinity?"∞":r.pf.toFixed(2)}</td><td class="${cl(r.net)}">${fmt(r.net)}</td><td>${fmt(r.dd)}</td><td>${(r.net/(r.dd||1)).toFixed(2)}</td><td><button data-a="apply" data-i="${k}">Apply</button></td></tr>`).join("")}</table></div></section>`;
+msg(top.length?"Best: "+top[0].s.name.slice(7)+" → ₹"+fmt(top[0].net):"No combinations tested")}
+$("#cmp").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.a==="cstop")cmbStop=true;else if(b.dataset.a==="apply"){const c=CMB[+b.dataset.i];if(!c)return;const s=JSON.parse(JSON.stringify(c.s));S.push(s);cur=S.length-1;persist();render();live=true;go();msg("Applied “"+s.name+"” as a new saved strategy")}});
+/* ---------- Strategy generator ---------- */
+const TFL=[[1,"1 min"],[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"],[60,"1 hour"],[240,"4 hour"],[1440,"1 day"]];
+const allowTF=()=>TFL.filter(x=>x[0]>=D.bar&&x[0]%D.bar===0);
+const GRID={sl:[0.25,0.5,0.75,1,1.5,2,3],tr:[0,0.25,0.5,1,1.5,2],slip:[0,0.5,1,2,3]},PG={},pick=a=>a[Math.random()*a.length|0];
+let genStop=false;
+function pgrid(t,k){const id=t+"."+k;if(PG[id])return PG[id];const[,,mn,mx,st]=PM[t].find(z=>z[0]===k),d=DEF[t][k];return PG[id]=[...new Set([.5,.75,1,1.5,2].map(m=>Number(Math.min(mx,Math.max(mn,Math.round(d*m/st)*st)).toFixed(4))))]}
+function spaceSize(K,ntf){const gp=t=>(PM[t]||[]).reduce((a,[k])=>a*pgrid(t,k).length,1);let tot=0;for(const[,ids]of allCombos(K))tot+=ids.reduce((a,t)=>a*gp(t),1);return tot*GRID.sl.length*GRID.tr.length*GRID.slip.length*ntf}
+const fixM=s=>s.inds.forEach(x=>{if(x.type==="MACD"&&x.p.fast>=x.p.slow){const a=x.p.fast;x.p.fast=x.p.slow;x.p.slow=a+1}});
+const gdesc=s=>s.inds.map(x=>x.type+"("+Object.values(x.p).join(",")+")").join(" + ");
+function randStrat(base,tfs,list){const[tr,ids]=pick(list),s=mkCombo(ids,tr,base);s.inds.forEach(x=>(PM[x.type]||[]).forEach(([k])=>x.p[k]=pick(pgrid(x.type,k))));fixM(s);s.tf=pick(tfs);s.slT="pct";s.trT="pct";s.tpT="pts";s.tp=0;s.sl=pick(GRID.sl);s.tr=pick(GRID.tr);s.tra=0;s.slip=pick(GRID.slip);return s}
+function mutate(s,tfs){const c=JSON.parse(JSON.stringify(s)),r=Math.random(),nb=(a,v)=>{let i=Math.max(0,a.indexOf(v));i=Math.max(0,Math.min(a.length-1,i+(Math.random()<.5?-1:1)));return a[i]},ps=[];c.inds.forEach(x=>(PM[x.type]||[]).forEach(([k])=>ps.push([x,k])));
+if(r<.5&&ps.length){const[x,k]=pick(ps);x.p[k]=nb(pgrid(x.type,k),x.p[k])}else if(r<.7)c.sl=nb(GRID.sl,c.sl);else if(r<.85)c.tr=nb(GRID.tr,c.tr);else if(r<.95)c.slip=nb(GRID.slip,c.slip);else c.tf=pick(tfs);fixM(c);return c}
+function gspace(){const e=$("#gsp");if(e)e.textContent="Search space: about "+spaceSize(+$("#g_k").value,document.querySelectorAll(".gtf:checked").length||1).toLocaleString("en-IN")+" possible strategies (every mix of indicators, their settings, stop loss, trailing stop, slippage and timeframe). The generator samples this space, then refines the best ones."}
+function genOpen(){if(!guard())return;$("#gen").innerHTML=`<section><h3>🚀 Find best strategies <span class="mu">· your data is ${D.bar>=1440?"daily":D.bar+"-min"}</span></h3>
+<div class="mu" style="margin-bottom:8px"><b>Stage 1</b> tests every indicator combination. <b>Stage 2</b> tunes the best ones: settings, stop loss %, trailing stop %, slippage and timeframe, for the highest profit with drawdown inside your band. <b>Stage 3</b> re-tests the winners on the last 30% of your dates, which were not used for tuning. Only timeframes equal to or higher than your data's are offered, since a higher timeframe is built from the lower one but not the reverse.</div>
+<div class="g"><label>Capital ₹<input id="g_cap" type="number" value="1000000"></label><label>Max drawdown from %<input id="g_lo" type="number" value="10"></label><label>Max drawdown to %<input id="g_hi" type="number" value="15"></label><label>Tuning tests (stage 2)<input id="g_n" type="number" value="2000"></label><label>Minimum trades<input id="g_min" type="number" value="30"></label><label>Max indicators per strategy<select id="g_k"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label><label>Combinations to tune<input id="g_top" type="number" value="15"></label><label style="flex-direction:row;align-items:center;gap:8px;color:var(--tx)"><input id="g_val" type="checkbox" checked> Check on unseen dates</label></div>
+<div class="mu">Timeframes to try:</div><div class="chips" style="margin:6px 0 10px;max-height:none">${allowTF().map(([v,t])=>`<label class="chip" style="flex-direction:row;gap:5px;color:var(--tx)"><input type="checkbox" class="gtf" value="${v}" ${v===D.bar?"checked":""}> ${t}</label>`).join("")}</div>
+<div id="gsp" class="mu"></div><div class="row" style="margin-top:10px"><button class="p big" data-a="gstart">▶ Start</button></div></section>`;gspace();$("#gen").scrollIntoView({behavior:"smooth",block:"start"})}
+function genRun(){const g=id=>+$("#"+id).value,cap=g("g_cap"),lo=g("g_lo"),hi=g("g_hi"),N=g("g_n"),minT=g("g_min"),K=g("g_k"),M=g("g_top")||15,val=$("#g_val").checked,tfs=[...document.querySelectorAll(".gtf:checked")].map(x=>+x.value);
+if(!tfs.length)return msg("Select at least one timeframe");if(!(cap>0)||!(lo<hi)||!(N>0))return msg("Check capital, drawdown band and number of tests");
+const f0=$("#from").value,t0=$("#to").value,a=Date.parse(f0)/1000,b=Date.parse(t0)/1000,iso=x=>new Date(x*1000).toISOString().slice(0,10),sp=a+.7*(b-a),TR=val?[f0,iso(sp)]:[f0,t0],TE=[iso(sp+86400),t0];
+const base=S[cur],list=allCombos(K),L1=[];for(const t of tfs)for(const c of list)L1.push([c,t]);const N1=L1.length,seen=new Set(),st1=[];let pool=[],short=[],ph=1,i=0,ok=0;genStop=false;
+const fit=m=>m.net-5*Math.max(0,m.ddp-hi,lo-m.ddp)*cap/100,by=(x,y)=>y.f-x.f;
+const ev=(s,w)=>{s.from=w[0];s.to=w[1];const q=backtest(s).st,ddp=q.dd/cap*100;return{s,n:q.n,net:q.net,dd:q.dd,ddp,wr:q.wr,pf:q.pf}};
+const mkm=m=>{m.ok=m.ddp>=lo&&m.ddp<=hi&&m.net>0;m.f=fit(m);return m};
+const ui=(t,d,n,x)=>{$("#gen").innerHTML=`<section><h3>${t}</h3><div style="height:10px;background:var(--bd);border-radius:5px"><div style="height:10px;width:${Math.min(100,d/n*100).toFixed(1)}%;background:var(--ac);border-radius:5px"></div></div><div class="mu" style="margin:8px 0">${d} / ${n} · ${x}</div><button data-a="gstop">■ Stop and show best so far</button></section>`;msg(t)};
+const step=()=>{const t1=performance.now();
+while(!genStop&&performance.now()-t1<40){
+if(ph===1){if(i>=N1){ph=2;i=0;const so=st1.sort(by),sn=new Set();for(const m of so){const ids=m.s.inds.map(x=>x.type),k=ids.join("+");if(!sn.has(k)){sn.add(k);short.push([ids[0],ids]);if(short.length>=M)break}}pool=so.slice(0,40);ok=pool.filter(x=>x.ok).length;break}
+const[c,t]=L1[i++];try{const s=mkCombo(c[1],c[0],base);s.tf=t;s.slT="pct";s.trT="pct";s.tpT="pts";s.tp=0;s.sl=1;s.tr=0;s.tra=0;s.slip=0.5;const m=mkm(ev(s,TR));if(m.n>=minT)st1.push(m)}catch(e){}}
+else if(ph===2){if(i>=N||!short.length){ph=3;break}i++;const s=pool.length>5&&i>N*.2&&Math.random()<.65?mutate(pick(pool.slice(0,8)).s,tfs):randStrat(base,tfs,short);
+try{const key=s.tf+"|"+s.sl+"|"+s.tr+"|"+s.slip+"|"+gdesc(s);if(seen.has(key))continue;seen.add(key);const m=mkm(ev(s,TR));if(m.n<minT)continue;if(m.ok)ok++;pool.push(m);pool.sort(by);if(pool.length>40)pool.pop()}catch(e){}}
+else break}
+if(genStop&&ph===1){pool=st1.sort(by).slice(0,40);ok=pool.filter(x=>x.ok).length;ph=3}
+if(genStop&&ph===2)ph=3;
+if(ph===3){const f=pool.filter(x=>x.ok),top=(f.length?f:pool).slice(0,20);if(val)top.forEach(m=>{try{const o=ev(JSON.parse(JSON.stringify(m.s)),TE);m.o={n:o.n,net:o.net,ddp:o.ddp}}catch(e){}});GX={v:val,tr:TR,te:TE};genShow(pool,N1+(genStop?0:N),N1+N,ok,lo,hi,cap);return}
+const b=pool.find(x=>x.ok);
+if(ph===1){ui("Stage 1 of 3 · testing every indicator combination",i,N1,st1.length+" usable so far");setTimeout(step,0)}
+else{ui("Stage 2 of 3 · tuning "+short.length+" combinations: settings, stops, slippage, timeframe",i,N,ok+" inside the "+lo+"–"+hi+"% drawdown band"+(b?" · best ₹ "+fmt(b.net)+" at "+b.ddp.toFixed(1)+"% DD":""));setTimeout(step,0)}};
+msg("Starting…");setTimeout(step,20)}
+let GEN=[];
+let GINFO=null,GOPEN=-1,GX={};
+const OPL=Object.fromEntries(OPS),rtxt=s=>Object.keys(GR).filter(g=>s.rules[g].length).map(g=>"<b>"+GR[g].split(":")[0]+"</b>: "+s.rules[g].map(r=>esc(r.l+" "+OPL[r.op]+" "+r.r)).join(" AND ")).join("<br>");
+function gedit(k,s){const nf=(l,p,v)=>`<label>${l}<input type="number" step="any" data-gk="${k}" data-gp="${p}" value="${v}"></label>`;
+return`<tr><td colspan="15" style="text-align:left;white-space:normal"><div class="g">${s.inds.map((x,xi)=>`<div><b>${NAMES[x.type]}</b>${(PM[x.type]||[]).map(([key,l,mn,mx,st])=>`<label>${l}<input type="number" min="${mn}" max="${mx}" step="${st}" data-gk="${k}" data-gp="inds.${xi}.p.${key}" value="${x.p[key]}"></label>`).join("")||' <span class="mu">(no settings)</span>'}</div>`).join("")}
+<label>Timeframe<select data-gk="${k}" data-gp="tf">${allowTF().map(([v,t])=>`<option value="${v}" ${v===Math.max(s.tf,D.bar)?"selected":""}>${t}</option>`).join("")}</select></label>${nf("Stop loss %","sl",s.sl)}${nf("Trailing stop %","tr",s.tr)}${nf("Slippage (pts)","slip",s.slip)}</div>
+<div class="mu" style="margin:6px 0">${rtxt(s)}</div><button class="p" data-a="grerun" data-i="${k}">▶ Re-run backtest with these settings</button> <button data-a="gapply" data-i="${k}">Save as strategy</button></td></tr>`}
+function genShow(pool,i,N,ok,lo,hi,cap){const f=pool.filter(x=>x.ok);GEN=(f.length?f:pool).slice(0,20);GINFO={i,N,ok,lo,hi,cap,f:f.length>0,...GX};GOPEN=-1;genTable();msg(GEN.length?"Best: ₹ "+fmt(GEN[0].net)+" at "+GEN[0].ddp.toFixed(1)+"% drawdown":"Nothing generated (try fewer minimum trades)")}
+function genTable(){const{i,N,ok,lo,hi,cap,f}=GINFO,cl=v=>v>=0?"u":"d",y=$("#gen").scrollTop;
+$("#gen").innerHTML=`<section><h3><button data-a="gopen" style="float:right">⚙ New search</button>Generated strategies <span class="mu">· ${i} tested${i<N?" (stopped early)":""} · ${ok} inside ${lo}–${hi}% drawdown</span></h3><div class="mu" style="margin-bottom:6px">${f?"Ranked by net profit, only strategies whose max drawdown is "+lo+"–"+hi+"% of ₹ "+fmt(cap)+".":"None landed inside the drawdown band; showing the closest by profit after a drawdown penalty."} Click <b>View / edit</b> on any row to see its indicators and settings, change them and re-run the backtest. Past results are not a guarantee; check another date range too.</div>
+<div class="sc"><table><tr><th>#</th><th style="text-align:left">Indicators and settings</th><th>TF</th><th>SL %</th><th>Trail %</th><th>Slip</th><th>Trades</th><th>Win %</th><th>PF</th><th>Net ₹</th><th>Max DD ₹</th><th>DD %</th>${GINFO.v?"<th>Unseen net ₹</th><th>Unseen DD %</th>":""}<th></th></tr>${GEN.map((r,k)=>`<tr><td>${k+1}</td><td style="text-align:left">${esc(gdesc(r.s))}</td><td>${r.s.tf>=1440?"1d":r.s.tf+"m"}</td><td>${r.s.sl}</td><td>${r.s.tr||"–"}</td><td>${r.s.slip}</td><td>${r.n}</td><td>${r.wr.toFixed(0)}%</td><td>${r.pf===Infinity?"∞":r.pf.toFixed(2)}</td><td class="${cl(r.net)}">${fmt(r.net)}</td><td>${fmt(r.dd)}</td><td>${r.ddp.toFixed(1)}</td>${GINFO.v?(r.o?`<td class="${cl(r.o.net)}">${fmt(r.o.net)}</td><td>${r.o.ddp.toFixed(1)}</td>`:"<td>–</td><td>–</td>"):""}<td><button data-a="gedit" data-i="${k}">${GOPEN===k?"Hide":"View / edit"}</button> <button data-a="gapply" data-i="${k}">Apply</button></td></tr>${GOPEN===k?gedit(k,r.s):""}`).join("")}</table></div></section>`;$("#gen").scrollTop=y}
+$("#gen").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!GINFO)return;const a=b.dataset.a,k=+b.dataset.i;if(a==="gopen")return genOpen();if(a==="gedit"){GOPEN=GOPEN===k?-1:k;genTable();if(GOPEN===k)GEN[k]&&showLog(Object.assign(backtest(GEN[k].s)));return}
+if(a==="grerun"){const c=GEN[k];if(!c)return;const s=JSON.parse(JSON.stringify(c.s));document.querySelectorAll('#gen [data-gk="'+k+'"]').forEach(el=>setP(s,el.dataset.gp,parseFloat(el.value)||0));fixM(s);
+try{const r=backtest(s),st=r.st,ddp=st.dd/GINFO.cap*100;if(GINFO.v)try{const s2=JSON.parse(JSON.stringify(s));s2.from=GINFO.te[0];s2.to=GINFO.te[1];const q=backtest(s2).st;c.o={n:q.n,net:q.net,ddp:q.dd/GINFO.cap*100}}catch(e2){}Object.assign(c,{s,n:st.n,net:st.net,dd:st.dd,ddp,wr:st.wr,pf:st.pf,ok:ddp>=GINFO.lo&&ddp<=GINFO.hi&&st.net>0});show(r);showLog(r);genTable();msg("Re-ran: ₹ "+fmt(st.net)+" net, "+ddp.toFixed(1)+"% drawdown, "+st.n+" trades")}catch(err){msg("Error: "+err.message)}}});
+
+$("#gen").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const a=b.dataset.a;if(a==="gstart")genRun();else if(a==="gstop")genStop=true;else if(a==="gapply"){const c=GEN[+b.dataset.i];if(!c)return;const s=JSON.parse(JSON.stringify(c.s));s.name="Gen: "+gdesc(s);delete s.from;delete s.to;S.push(s);cur=S.length-1;persist();render();live=true;go();msg("Applied as a new saved strategy")}});
+$("#gen").addEventListener("change",e=>{if(e.target.id==="g_k"||e.target.classList.contains("gtf"))gspace()});
+/* ---------- Trade log ---------- */
+let LT=[],LN=300,logT=0,LR=null;
+const px2=v=>(+v).toFixed(2);
+function tlog(r){const B=r.B,sl=+r.s.slip||0;return r.trades.map((x,k)=>{const L=x.side>0,sg=x.why==="Signal",si=Math.max(0,x.ei-1);
+return{k:k+1,ea:L?"BUY":"SELL",xa:L?"SELL":"BUY",esT:ts(B.t[si]),esP:B.c[si],eT:ts(x.eT),eP:x.ep,xsT:sg?ts(B.t[Math.max(0,x.xi-1)]):ts(x.xT),xsP:sg?B.c[Math.max(0,x.xi-1)]:(x.tg!=null?x.tg:x.xp+x.side*sl),xT:ts(x.xT),xP:x.xp,why:x.why,pts:x.pts,chg:x.chg,net:x.net,cum:r.st.cum[k]}})}
+function showLog(r){LR=r;LT=tlog(r);const n=LT.length,cl=v=>v>=0?"u":"d",tf=Math.max(r.s.tf,D.bar);
+$("#log").innerHTML=`<section><h3>Trade log · ${esc(r.s.name)} · ${tf>=1440?"1 day":tf+" min"} candles ${r.s.from?"· "+r.s.from+" → "+r.s.to:""} <span class="mu">· ${n} trades, run fresh on this timeframe</span></h3>
+<div class="mu" style="margin-bottom:6px">Signal = the candle close where the rule became true. Order = the price and time it was actually filled (next candle open, with slippage). Stop loss, trailing stop and target exits trigger and fill within the same candle.</div>
+<div class="row" style="margin-bottom:6px"><button data-a="lcsv">⬇ CSV (this strategy)</button><button data-a="lall">⬇ CSV (all strategies)</button>${n>LN?`<button data-a="lmore">Show all ${n} trades</button>`:""}</div>
+<div class="sc" style="max-height:60vh;overflow:auto"><table><tr><th>#</th><th>Entry</th><th>Entry signal time</th><th>Signal price</th><th>Entry order time</th><th>Entry fill price</th><th>Exit</th><th>Exit signal time</th><th>Signal price</th><th>Exit order time</th><th>Exit fill price</th><th>Reason</th><th>Pts</th><th>Charges ₹</th><th>Net ₹</th><th>Cum ₹</th></tr>${LT.slice(0,LN).map(t=>`<tr><td>${t.k}</td><td>${t.ea}</td><td>${t.esT}</td><td>${px2(t.esP)}</td><td>${t.eT}</td><td>${px2(t.eP)}</td><td>${t.xa}</td><td>${t.xsT}</td><td>${px2(t.xsP)}</td><td>${t.xT}</td><td>${px2(t.xP)}</td><td>${esc(t.why)}</td><td class="${cl(t.pts)}">${px2(t.pts)}</td><td>${fmt(t.chg)}</td><td class="${cl(t.net)}">${fmt(t.net)}</td><td class="${cl(t.cum)}">${fmt(t.cum)}</td></tr>`).join("")}</table></div></section>`}
+function dl(name,txt){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+const HDR=["Entry action","Entry signal time","Entry signal price","Entry order time","Entry fill price","Exit action","Exit signal time","Exit signal price","Exit order time","Exit fill price","Reason","Points","Charges","Net","Cumulative"];
+const csvq=v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v,trow=t=>[t.ea,t.esT,px2(t.esP),t.eT,px2(t.eP),t.xa,t.xsT,px2(t.xsP),t.xT,px2(t.xP),t.why,px2(t.pts),Math.round(t.chg),Math.round(t.net),Math.round(t.cum)];
+$("#log").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const a=b.dataset.a;if(a==="lmore"){LN=1e9;showLog(LR)}
+else if(a==="lcsv"&&LR)dl("trades_"+LR.s.name.replace(/\W+/g,"_")+".csv",[["#"].concat(HDR).map(csvq).join(",")].concat(LT.map(t=>[t.k].concat(trow(t)).map(csvq).join(","))).join("\n"));
+else if(a==="lall"){msg("Running every strategy for the trade log…");setTimeout(()=>{const o=[["Strategy","Timeframe","#"].concat(HDR).join(",")];for(const s of S){try{const r=backtest(s),tf=Math.max(s.tf,D.bar);tlog(r).forEach(t=>o.push([s.name,tf+"m",t.k].concat(trow(t)).map(csvq).join(",")))}catch(err){}}dl("all_strategies_trades.csv",o.join("\n"));msg("Exported trade logs of "+S.length+" strategies")},20)}});
+function setTheme(m){document.documentElement.dataset.theme=m;try{localStorage.setItem("nbt_theme",m)}catch(e){}$("#thm").textContent=m==="dark"?"☀ Light":"🌙 Dark"}
+{let m="light";try{m=localStorage.getItem("nbt_theme")||"light"}catch(e){}setTheme(m)}
+$("#thm").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+render();
+</script></body></html>
