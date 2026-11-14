@@ -523,7 +523,7 @@ const r2=v=>+(+v).toFixed(2),rst=(v,st)=>+(Math.round(v/st)*st).toFixed(6),SIDE=
 const findRule=(s,g,o)=>s.rules[g].findIndex(r=>r.l===o.l&&r.op===o.op&&String(r.r)===String(o.r));
 function fxEval(s){const F=FX,r=backtest(s),m=new Map();for(const t of r.trades)m.set(tkey(t),t);
 const hurt=[],fixed=new Map(),skip=new Set(),still=new Map();let nw=0,nwNet=0,nwL=0;
-for(const k of F.W){const t=m.get(k),o=F.map.get(k);if(!t||(F.mode==="same"?t.net<o.net-1:t.net<=0))hurt.push(k)}
+for(const k of F.W){const t=m.get(k),o=F.map.get(k);if(!t||(F.mode==="same"?t.net<o.net-1e-6:t.net<=0))hurt.push(k)}
 for(const k of F.L){const t=m.get(k);if(!t)skip.add(k);else if(t.net>0)fixed.set(k,t.net);else still.set(k,t.net)}
 for(const[k,t]of m)if(!F.map.has(k)){nw++;nwNet+=t.net;if(t.net<=0)nwL++}
 return{st:r.st,hurt,fixed,skip,still,nw,nwNet,nwL,d:r.st.net-F.net}}
