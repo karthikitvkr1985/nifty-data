@@ -127,6 +127,7 @@ body.drag .dz{border:1.5px solid var(--ac);background:var(--pn2)}
 .todt{width:100%}.todt th,.todt td{font-size:13.5px;padding:5px 10px}.todt td.tl{text-align:left;white-space:nowrap}.todt th:first-child{text-align:left}
 .todt td.tb{width:38%;padding:5px 10px}.bar{height:12px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}.bar i.up{background:var(--up)}.bar i.dn{background:var(--dn)}
 .badge{display:inline-block;margin-left:8px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}.badge.up{background:var(--up)}.badge.dn{background:var(--dn)}
+.fxt td.ch{white-space:normal;text-align:left;min-width:260px;max-width:520px}.fxt th{text-align:right}.fxt th:nth-child(2){text-align:left}
 @media(max-width:700px){.tod-sum{grid-template-columns:1fr}}
 
 </style></head><body class="landing">
@@ -287,7 +288,7 @@ for(let i=0;i<n;i++){const q=(H[i]+L[i]+C[i])/3,g=H[i]-L[i];pp[i]=q;r1[i]=2*q-L[
 function tok(s,ser){s=String(s).trim();if(s!==""&&!isNaN(+s)){const v=+s;return{g:()=>v}}const m=s.match(/^([\w.]+)(?:\[(\d+)\])?$/);if(!m||!ser[m[1]])throw Error("Unknown series “"+s+"”");const a=ser[m[1]],o=+(m[2]||0);return{g:i=>i-o>=0?a[i-o]:NaN}}
 function compile(r,ser){const L=tok(r.l,ser),Rr=tok(r.r,ser),op=r.op;return i=>{const a=L.g(i),b=Rr.g(i);
 if(op===">")return a>b;if(op==="<")return a<b;if(op===">=")return a>=b;if(op==="<=")return a<=b;const pa=L.g(i-1),pb=Rr.g(i-1);return op==="xa"?pa<=pb&&a>b:pa>=pb&&a<b}}
-function backtest(s){if(Object.keys(BC).length>5)BC={};const TF=Math.max(s.tf,D.bar||1);const from=Date.parse(s.from||(($("#from")||{}).value)||RG.from||D.from)/1000,to=Date.parse(s.to||(($("#to")||{}).value)||RG.to||D.to)/1000,bk=TF+"|"+from+"|"+to,B=BC[bk]||(BC[bk]=resample(TF,from,to)),n=B.t.length,ser={open:B.o,high:B.h,low:B.l,close:B.c};
+function backtest(s){if(Object.keys(BC).length>5)BC={};const TF=Math.max(s.tf,D.bar||1);const from=Date.parse(s.from||(($("#from")||{}).value)||RG.from||D.from)/1000,to=Date.parse(s.to||(($("#to")||{}).value)||RG.to||D.to)/1000,bk=TF+"|"+from+"|"+to,B=BC[bk]||(BC[bk]=resample(TF,from,to)),n=B.t.length,ser={open:B.o,high:B.h,low:B.l,close:B.c,tod:B.tod||(B.tod=B.t.map(x=>(x%86400)/60))};
 if(Object.keys(IC).length>Math.max(12,Math.floor(1.5e7/D.n)))IC={};s.inds.forEach(x=>{const ik=bk+JSON.stringify([x.type,x.p]),r=IC[ik]||(IC[ik]=calc(x,B));for(const k in r)ser[k?x.id+"."+k:x.id]=r[k]});
 const ru={};for(const k in GR)ru[k]=s.rules[k].filter(r=>String(r.l).trim()&&String(r.r).trim()).map(r=>compile(r,ser));
 const all=(f,i)=>f.length>0&&f.every(g=>g(i)),day=i=>Math.floor(B.t[i]/86400),trades=[];if(!ru.enL.length&&!ru.enS.length)throw Error("Add at least one entry condition (long or short) before running");
@@ -309,7 +310,7 @@ const n=tr.length;return{n,net:eq,fees:tr.reduce((a,x)=>a+x.chg,0),pts:tr.reduce
 /* ---------- UI ---------- */
 /* ---------- UI ---------- */
 const rf=(r,id)=>new RegExp("\\b"+id+"\\b").test(r.l+" "+r.r);
-const snames=s=>["open","high","low","close"].concat(...s.inds.map(outs)),isNum=v=>String(v).trim()!==""&&!isNaN(+v);
+const snames=s=>["open","high","low","close"].concat(D&&D.bar<1440?["tod"]:[],...s.inds.map(outs)),isNum=v=>String(v).trim()!==""&&!isNaN(+v);
 function fld(s,l,p,type="number",x=""){const v=get(s,p);return`<label>${l}<input data-p="${p}" ${type==="number"?'data-n="1" step="any"':""} type="${type}" ${type==="checkbox"?(v?"checked":""):`value="${esc(v)}"`} ${x}></label>`}
 /* slider + number box; sw=1 adds a "find best" scan button */
 function sld(l,p,v,mn,mx,st,sw,ex=""){v=+v||0;const a=mn,b=mx;mn=Math.min(mn,v);mx=Math.max(mx,v);
@@ -318,7 +319,7 @@ const unit=(s,t)=>`<select data-p="${t}" data-r="1"><option value="pts" ${s[t]==
 const kx=()=>D&&D.k?D.k:1,nice=x=>Number(x.toPrecision(2)),stp=m=>Math.max(0.01,Number((m/300).toPrecision(1)));
 const rkb=(s,l,v,t,mx,u)=>{const pc=s[t]==="pct",m=pc?mx/60:nice(mx*kx());return sld(l,v,s[v],0,m,pc?0.05:stp(m),1,u?unit(s,t):"")};
 function rngOf(n){const b=String(n).replace(/\[\d+\]$/,""),x=S[cur].inds.find(z=>b===z.id||b.startsWith(z.id+".")),t=x&&x.type;
-if(/\.dir$/.test(b))return[-1,1,1];if(t==="RSI"||t==="STOCH"||t==="ADX")return[0,100,1];if(t==="WR")return[-100,0,1];if(t==="CCI")return[-300,300,5];if(t==="MACD")return[-200,200,1];
+if(/\.dir$/.test(b))return[-1,1,1];if(b==="tod")return[0,1435,5];if(t==="RSI"||t==="STOCH"||t==="ADX")return[0,100,1];if(t==="WR")return[-100,0,1];if(t==="CCI")return[-300,300,5];if(t==="MACD")return[-200,200,1];
 if(!D)return null;if(D.pmn==null){let a=1e18,m=0;for(let i=0;i<D.n;i++){if(D.c[i]<a)a=D.c[i];if(D.c[i]>m)m=D.c[i]}D.pmn=Math.floor(a);D.pmx=Math.ceil(m)}return[D.pmn,D.pmx,1]}
 const dflt=n=>{const g=rngOf(n);return g?(g[1]-g[0]>2000&&D?String(Math.round(D.c[D.n-1])):String(Math.round((g[0]+g[1])/2))):"0"};
 const sopt=(v,L,num)=>{const nv=isNum(v),ok=nv||L.includes(v)||!String(v);return(num?`<option value="#" ${nv?"selected":""}>＃ Number (slider)</option>`:"")+(ok?"":`<option value="${esc(v)}" selected>⚠ ${esc(v)}</option>`)+L.map(n=>`<option value="${n}" ${n===v?"selected":""}>${n}</option>`).join("")};
@@ -495,8 +496,8 @@ return `<div class="todp"><div class="tod-h"><b>When in the trading day do trade
 function showLog(r){LR=r;LT=tlog(r);const yrs=[...new Set(LT.map(t=>t.esT.slice(0,4)))],FY=LY==="all"?LT:LT.filter(t=>t.esT.slice(0,4)===LY),FT=LF==="win"?FY.filter(t=>t.net>0):LF==="loss"?FY.filter(t=>t.net<0):FY,np=Math.max(1,Math.ceil(FT.length/PS));LP=Math.min(LP,np-1);const w0=Math.max(0,Math.min(LP-3,np-7)),w1=Math.min(np,w0+7),pb=(l,i,d,c="")=>`<button data-a="lpg" data-i="${i}" ${d?"disabled":""} class="${c}">${l}</button>`,pg=`<div class="row" style="justify-content:center;margin-top:12px;flex-wrap:wrap">${pb("«",0,LP===0)}${pb("‹ Prev",LP-1,LP===0)}${Array.from({length:w1-w0},(_,k)=>w0+k).map(i=>pb(i+1,i,0,i===LP?"p":"")).join("")}${pb("Next ›",LP+1,LP>=np-1)}${pb("»",np-1,LP>=np-1)}<span class="mu" style="flex:0 0 auto;margin-left:8px">Trades ${FT.length?LP*PS+1:0}–${Math.min(FT.length,LP*PS+PS)} of ${FT.length}</span></div>`;const n=LT.length,cl=v=>v>=0?"u":"d",tf=Math.max(r.s.tf,D.bar);
 $("#log").innerHTML=`<section><h3>Trade log · ${esc(r.s.name)} · ${tf>=1440?"1 day":tf+" min"} candles ${r.s.from?"· "+r.s.from+" → "+r.s.to:""} <span class="mu">· ${n} trades, run fresh on this timeframe</span></h3>
 <div class="mu" style="margin-bottom:6px">Signal = the candle close where the rule became true. Order = the price and time it was actually filled (next candle open, with slippage). Stop loss, trailing stop and target exits trigger and fill within the same candle.</div>
-<div class="lctl"><button data-a="tod" class="${TODON?"p":""}" title="See which part of the trading day makes and loses money">Time-of-day profit &amp; loss pattern</button><button data-a="lcsv">⬇ CSV (this strategy)</button><button data-a="lall">⬇ CSV (all strategies)</button><select id="lgf" title="Show only profitable or losing trades"><option value="all" ${LF==="all"?"selected":""}>All trades (${FY.length})</option><option value="win" ${LF==="win"?"selected":""}>Profit trades (${FY.filter(t=>t.net>0).length})</option><option value="loss" ${LF==="loss"?"selected":""}>Loss trades (${FY.filter(t=>t.net<0).length})</option></select><select id="lgy"><option value="all">All years (${n} trades)</option>${yrs.map(y=>`<option value="${y}" ${y===LY?"selected":""}>${y} (${LT.filter(t=>t.esT.slice(0,4)===y).length})</option>`).join("")}</select><select id="lps">${[100,500,1000,2000].map(v=>`<option value="${v}" ${v===PS?"selected":""}>${v} per page</option>`).join("")}</select></div>
-${TODON?todHTML(FY):""}<div class="lscroll"><table class="logt"><thead><tr><th>#</th><th>Entry</th><th>Entry signal time</th><th>Signal price</th><th>Entry order time</th><th>Entry fill price</th><th>Exit</th><th>Exit signal time</th><th>Signal price</th><th>Exit order time</th><th>Exit fill price</th><th>Reason</th><th>Pts</th><th>Charges ₹</th><th>Net ₹</th><th>Cum ₹</th></tr></thead><tbody>${FT.slice(LP*PS,LP*PS+PS).map(t=>`<tr><td>${t.k}</td><td>${t.ea}</td><td class="tc">${dtc(t.esT)}</td><td>${px2(t.esP)}</td><td class="tc">${dtc(t.eT)}</td><td>${px2(t.eP)}</td><td>${t.xa}</td><td class="tc">${dtc(t.xsT)}</td><td>${px2(t.xsP)}</td><td class="tc">${dtc(t.xT)}</td><td>${px2(t.xP)}</td><td class="rs">${esc(t.why)}</td><td class="${cl(t.pts)}">${px2(t.pts)}</td><td>${fmt(t.chg)}</td><td class="${cl(t.net)}">${fmt(t.net)}</td><td class="${cl(t.cum)}">${fmt(t.cum)}</td></tr>`).join("")}</tbody></table></div>${pg}</section>`}
+<div class="lctl"><button data-a="tod" class="${TODON?"p":""}" title="See which part of the trading day makes and loses money">Time-of-day profit &amp; loss pattern</button><button data-a="fix" class="${FXON?"p":""}" title="Find indicator and strategy changes that turn losing trades into profit without touching the winners">🔧 Loss → profit fixer</button><button data-a="lcsv">⬇ CSV (this strategy)</button><button data-a="lall">⬇ CSV (all strategies)</button><select id="lgf" title="Show only profitable or losing trades"><option value="all" ${LF==="all"?"selected":""}>All trades (${FY.length})</option><option value="win" ${LF==="win"?"selected":""}>Profit trades (${FY.filter(t=>t.net>0).length})</option><option value="loss" ${LF==="loss"?"selected":""}>Loss trades (${FY.filter(t=>t.net<0).length})</option></select><select id="lgy"><option value="all">All years (${n} trades)</option>${yrs.map(y=>`<option value="${y}" ${y===LY?"selected":""}>${y} (${LT.filter(t=>t.esT.slice(0,4)===y).length})</option>`).join("")}</select><select id="lps">${[100,500,1000,2000].map(v=>`<option value="${v}" ${v===PS?"selected":""}>${v} per page</option>`).join("")}</select></div>
+${TODON?todHTML(FY):""}${FXON?fxHTML():""}<div class="lscroll"><table class="logt"><thead><tr><th>#</th><th>Entry</th><th>Entry signal time</th><th>Signal price</th><th>Entry order time</th><th>Entry fill price</th><th>Exit</th><th>Exit signal time</th><th>Signal price</th><th>Exit order time</th><th>Exit fill price</th><th>Reason</th><th>Pts</th><th>Charges ₹</th><th>Net ₹</th><th>Cum ₹</th></tr></thead><tbody>${FT.slice(LP*PS,LP*PS+PS).map(t=>`<tr><td>${t.k}</td><td>${t.ea}</td><td class="tc">${dtc(t.esT)}</td><td>${px2(t.esP)}</td><td class="tc">${dtc(t.eT)}</td><td>${px2(t.eP)}</td><td>${t.xa}</td><td class="tc">${dtc(t.xsT)}</td><td>${px2(t.xsP)}</td><td class="tc">${dtc(t.xT)}</td><td>${px2(t.xP)}</td><td class="rs">${esc(t.why)}</td><td class="${cl(t.pts)}">${px2(t.pts)}</td><td>${fmt(t.chg)}</td><td class="${cl(t.net)}">${fmt(t.net)}</td><td class="${cl(t.cum)}">${fmt(t.cum)}</td></tr>`).join("")}</tbody></table></div>${pg}</section>`}
 function dl(name,txt){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 const HDR=["Entry action","Entry signal time","Entry signal price","Entry order time","Entry fill price","Exit action","Exit signal time","Exit signal price","Exit order time","Exit fill price","Reason","Points","Charges","Net","Cumulative"];
 const csvq=v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v,trow=t=>[t.ea,t.esT,px2(t.esP),t.eT,px2(t.eP),t.xa,t.xsT,px2(t.xsP),t.xT,px2(t.xP),t.why,px2(t.pts),Math.round(t.chg),Math.round(t.net),Math.round(t.cum)];
@@ -510,6 +511,118 @@ $("#land").addEventListener("change",e=>{const t=e.target;if(t.id==="file"&&t.fi
 ["dragenter","dragover"].forEach(ev=>document.addEventListener(ev,e=>{if(e.dataTransfer&&[...e.dataTransfer.types||[]].includes("Files")){e.preventDefault();document.body.classList.add("drag")}}));
 document.addEventListener("dragleave",e=>{if(!e.relatedTarget)document.body.classList.remove("drag")});
 document.addEventListener("drop",e=>{document.body.classList.remove("drag");const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f){e.preventDefault();load(f)}});
+/* ---------- Loss → profit fixer ---------- */
+let FX=null,FXON=false,FXstop=false,FXbusy=false,FXV="safe",FXM="same";
+const tkey=t=>t.side+"|"+t.eT,fxSig=s=>JSON.stringify({...s,name:0,tmp:0})+"|"+(($("#from")||{}).value||RG.from)+"|"+(($("#to")||{}).value||RG.to);
+const HELP=[["RSI",{period:14}],["ADX",{period:14}],["CCI",{period:20}],["WR",{period:14}],["STOCH",{k:14,smooth:3,d:3}],["MACD",{fast:12,slow:26,sig:9}],["EMA",{period:20}],["EMA",{period:50}],["SMA",{period:200}],["VWAP",{}],["ST",{period:10,mult:3}],["BB",{period:20,mult:2}]];
+const OSC=new Set(["RSI","CCI","WR","STOCH","ADX","MACD"]),MAT=new Set(["EMA","SMA","VWAP"]);
+function ensureInd(s,type,p){const ps=JSON.stringify(p),f=s.inds.find(x=>x.type===type&&JSON.stringify(x.p)===ps);if(f)return f.id;let k=1;while(s.inds.some(x=>x.id===type+k))k++;const id=type+k;s.inds.push({type,id,p:{...p}});return id}
+const fxNm=(t,p,o)=>{const v=Object.values(p).join(",");return NAMES[t].replace(/ \(.*\)$/,"")+(v?"("+v+")":"")+(o?(o==="dir"?" direction":" "+o):"")};
+const hhmm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(Math.round(m%60)).padStart(2,"0");
+const r2=v=>+(+v).toFixed(2),rst=(v,st)=>+(Math.round(v/st)*st).toFixed(6),SIDE={enL:"long",enS:"short",exL:"long exit",exS:"short exit"};
+const findRule=(s,g,o)=>s.rules[g].findIndex(r=>r.l===o.l&&r.op===o.op&&String(r.r)===String(o.r));
+function fxEval(s){const F=FX,r=backtest(s),m=new Map();for(const t of r.trades)m.set(tkey(t),t);
+const hurt=[],fixed=new Map(),skip=new Set(),still=new Map();let nw=0,nwNet=0,nwL=0;
+for(const k of F.W){const t=m.get(k),o=F.map.get(k);if(!t||(F.mode==="same"?t.net<o.net-1e-6:t.net<=0))hurt.push(k)}
+for(const k of F.L){const t=m.get(k);if(!t)skip.add(k);else if(t.net>0)fixed.set(k,t.net);else still.set(k,t.net)}
+for(const[k,t]of m)if(!F.map.has(k)){nw++;nwNet+=t.net;if(t.net<=0)nwL++}
+return{st:r.st,hurt,fixed,skip,still,nw,nwNet,nwL,d:r.st.net-F.net}}
+function fxCands(base,pr,r,Ltr,Wtr){const C=[],B=r.B,ser=r.ser,add=(ty,lab,key,ap)=>C.push({ty,lab,key,ap});
+/* indicator settings */
+base.inds.forEach((x,i)=>(PM[x.type]||[]).forEach(([k,l,mn,mx,st])=>{const c=+x.p[k];
+const vs=[...new Set([.5,.6,.7,.8,.9,1.1,1.2,1.35,1.5,1.75,2].map(m=>c*m).concat([c-st,c+st,c-2*st,c+2*st]).map(v=>+Math.min(mx,Math.max(mn,rst(v,st))).toFixed(6)))].filter(v=>v!==c);
+for(const v of vs)add("Indicator",`${NAMES[x.type]} (${x.id}) ${l}: ${c} → ${v}`,"p:"+x.id+"."+k,s=>{const y=s.inds.find(z=>z.id===x.id);if(y)y.p[k]=v})}));
+/* indicator levels used in conditions */
+for(const g in GR)base.rules[g].forEach(o=>{if(!isNum(o.r))return;const rg=rngOf(o.l);if(!rg||rg[1]-rg[0]>2000)return;const sp=rg[1]-rg[0],c=+o.r;
+const vs=[...new Set([-.2,-.15,-.1,-.075,-.05,-.025,.025,.05,.075,.1,.15,.2].map(f=>Math.min(rg[1],Math.max(rg[0],rst(c+f*sp,rg[2])))))].filter(v=>v!==c);
+for(const v of vs)add("Indicator level",`${GR[g].split(":")[0].replace(/^[^A-Z]+/,"")}: “${o.l} ${OPL[o.op]} ${o.r}” → level ${v}`,"l:"+g+":"+o.l+o.op+o.r,s=>{const j=findRule(s,g,o);if(j>=0)s.rules[g][j].r=String(v)})});
+/* stop loss, target, trailing stop */
+const eps=r.trades.map(t=>t.ep).sort((a,b)=>a-b),P=eps[eps.length>>1]||D.c[D.n-1],pc=[.1,.15,.2,.3,.4,.5,.75,1,1.5,2];
+for(const[p,pt,l]of[["sl","slT","Stop loss"],["tp","tpT","Target"],["tr","trT","Trailing stop"]]){const c=+base[p]||0,u=base[pt],un=u==="pct"?"%":" pts",rd=v=>u==="pct"?r2(v):Math.max(1,Math.round(v));
+let vs=c>0?[0].concat([.25,.5,.75,1.25,1.5,2,3].map(m=>rd(c*m))):pc.map(x=>rd(u==="pct"?x:P*x/100));
+if(p==="tp"){const mf=Ltr.map(t=>t.mfe).filter(v=>v>0).sort((a,b)=>a-b);[.25,.5,.75].forEach(q=>{const v=mf[Math.floor(q*(mf.length-1))];if(v)vs.push(rd(u==="pct"?v/P*100:v))})}
+vs=[...new Set(vs)].filter(v=>v!==c&&v>=0);for(const v of vs)add("Risk",`${l}: ${c?c+un:"off"} → ${v?v+un:"off"}`,p,s=>{s[p]=v})}
+if(base.tr>0){const c=+base.tra||0,un=base.trT==="pct"?"%":" pts";for(const m of[0,.5,1,1.5,2,3]){const v=base.trT==="pct"?r2(base.tr*m):Math.round(base.tr*m);if(v!==c)add("Risk",`Trail starts after profit: ${c}${un} → ${v}${un}`,"tra",s=>{s.tra=v})}}
+if(D.bar<1440)add("Risk",`Day-end square-off: ${base.sq?"on → off":"off → on"}`,"sq",s=>{s.sq=!base.sq});
+/* entry filters: an extra entry condition that every winner already meets */
+const si=t=>Math.max(0,t.ei-1),feats=[];
+pr.inds.forEach(x=>OUT[x.type].forEach(o=>{const nm=o?x.id+"."+o:x.id,a=ser[nm];if(!a)return;const osc=OSC.has(x.type)||o==="dir";feats.push({x,o,nm,a,osc})}));
+const ruleFor=(s,f)=>f.o?ensureInd(s,f.x.type,f.x.p)+"."+f.o:ensureInd(s,f.x.type,f.x.p),FL=[];
+for(const[g,sd]of[["enL",1],["enS",-1]]){if(!base.rules[g].length)continue;const WS=Wtr.filter(t=>t.side===sd),LS=Ltr.filter(t=>t.side===sd);if(!LS.length)continue;const sn=sd>0?"long":"short";
+const num=(lab,key,get,mk)=>{const wv=WS.map(t=>get(si(t)));if(wv.some(isNaN))return;const lv=LS.map(t=>get(si(t)));
+if(!WS.length)return;const lo=Math.floor(Math.min(...wv)*100)/100,hi=Math.ceil(Math.max(...wv)*100)/100;
+const bl=lv.filter(v=>isNaN(v)||v<lo).length,bh=lv.filter(v=>isNaN(v)||v>hi).length;
+if(bl)FL.push({n:bl,c:["Filter",`Take ${sn}s only when ${lab(">=",lo)} (blocks ${bl} of ${LS.length} losing ${sn}s in a quick check)`,"f:"+g+key+">",s=>s.rules[g].push(mk(s,">=",lo))]});
+if(bh)FL.push({n:bh,c:["Filter",`Take ${sn}s only when ${lab("<=",hi)} (blocks ${bh} of ${LS.length} losing ${sn}s in a quick check)`,"f:"+g+key+"<",s=>s.rules[g].push(mk(s,"<=",hi))]})};
+for(const f of feats){const nmL=fxNm(f.x.type,f.x.p,f.o);
+if(f.osc)num((op,v)=>`${nmL} ${OPL[op]} ${v}`,f.nm,i=>f.a[i],(s,op,v)=>R_(ruleFor(s,f),op,String(v)));
+else{const c=ser.close;for(const op of[">","<"]){const ok=t=>op===">"?c[si(t)]>f.a[si(t)]:c[si(t)]<f.a[si(t)];if(!WS.length||!WS.every(ok))continue;const b=LS.filter(t=>!ok(t)).length;
+if(b)FL.push({n:b,c:["Filter",`Take ${sn}s only when close ${op} ${nmL} (blocks ${b} of ${LS.length} losing ${sn}s in a quick check)`,"f:"+g+f.nm+op,s=>s.rules[g].push(R_("close",op,ruleFor(s,f)))]})}}}
+const ma=feats.filter(f=>!f.osc&&MAT.has(f.x.type));for(const a of ma)for(const b of ma){if(a===b)continue;const ok=t=>a.a[si(t)]>b.a[si(t)];if(!WS.length||!WS.every(ok))continue;const n=LS.filter(t=>!ok(t)).length;
+if(n)FL.push({n,c:["Filter",`Take ${sn}s only when ${fxNm(a.x.type,a.x.p,a.o)} > ${fxNm(b.x.type,b.x.p,b.o)} (blocks ${n} of ${LS.length} losing ${sn}s in a quick check)`,"f:"+g+a.nm+">"+b.nm,s=>s.rules[g].push(R_(ruleFor(s,a),">",ruleFor(s,b)))]})}
+if(D.bar<1440&&B.tod)num((op,v)=>`signal candle time ${OPL[op]} ${hhmm(v)}`,"tod",i=>B.tod[i],(s,op,v)=>R_("tod",op,String(v)));
+if(!WS.length)add("Strategy",`Stop taking ${sn} trades (no ${sn} trade was a winner)`,"side"+g,s=>{s.rules[g]=[]})}
+FL.sort((a,b)=>b.n-a.n);const seen=new Set();for(const f of FL){if(seen.has(f.c[2]))continue;seen.add(f.c[2]);add(...f.c);if(seen.size>=60)break}
+/* extra exit: fires while a losing trade is in profit, never while a winner is open */
+const XL=[],sp=+base.slip||0,q=+base.qty||1;
+for(const[g,sd]of[["exL",1],["exS",-1]]){if(!base.rules[sd>0?"enL":"enS"].length)continue;const WS=Wtr.filter(t=>t.side===sd),LS=Ltr.filter(t=>t.side===sd&&t.mfe>0);if(!LS.length||!WS.length)continue;const sn=sd>0?"long":"short";
+const xf=feats.filter(f=>f.osc).map(f=>({lab:fxNm(f.x.type,f.x.p,f.o),key:f.nm,a:f.a,mk:(s,op,v)=>R_(ruleFor(s,f),op,String(v))}));
+if(D.bar<1440&&B.tod)xf.push({lab:"candle time",key:"tod",a:B.tod,mk:(s,op,v)=>R_("tod",op,String(v)),tm:1});
+for(const f of xf){let mx=-1e18,mn=1e18;for(const t of WS)for(let j=t.ei;j<t.x.xi;j++){const v=f.a[j];if(v>mx)mx=v;if(v<mn)mn=v}
+for(const op of[">=","<="]){if(f.tm&&op==="<=")continue;const thr=op===">="?Math.floor(mx*100)/100+0.01:Math.ceil(mn*100)/100-0.01;if(!isFinite(thr))continue;let n=0;
+for(const t of LS)for(let j=t.ei;j<t.x.xi;j++){const v=f.a[j];if(op===">="?v>=thr:v<=thr){if(sd*(B.o[j+1]-sd*sp-t.ep)*q-t.x.chg>0)n++;break}}
+if(n){const v=+thr.toFixed(2);XL.push({n,c:["Exit",`Exit ${sn}s when ${f.lab} ${OPL[op]} ${f.tm?hhmm(v):v} (closes ${n} losing ${sn}s while in profit and never fires while a winner is open, in a quick check)`,"x:"+g+f.key+op,s=>s.rules[g].push(f.mk(s,op,v))]})}}}}
+XL.sort((a,b)=>b.n-a.n);XL.slice(0,40).forEach(x=>add(...x.c));
+/* remove one existing condition, or a whole side */
+for(const g in GR)base.rules[g].forEach(o=>{if(g[0]==="e"&&g[1]==="n"&&base.rules[g].length<2)return;add("Strategy",`Remove ${SIDE[g]} condition “${o.l} ${OPL[o.op]} ${o.r}”`,"rm:"+g+o.l+o.op+o.r,s=>{const j=findRule(s,g,o);if(j>=0)s.rules[g].splice(j,1)})});
+if(base.rules.enL.length&&base.rules.enS.length&&Wtr.some(t=>t.side<0)&&Wtr.some(t=>t.side>0)){add("Strategy","Stop taking short trades","sideenS",s=>{s.rules.enS=[]});add("Strategy","Stop taking long trades","sideenL",s=>{s.rules.enL=[]})}
+return C}
+function fxStart(){if(!LR||!D||FXbusy)return;const s0=S[cur],base=JSON.parse(JSON.stringify(s0)),pr=JSON.parse(JSON.stringify(s0));HELP.forEach(([t,p])=>ensureInd(pr,t,p));
+let r;try{r=backtest(pr)}catch(e){msg("Error: "+e.message);return}
+const B=r.B,map=new Map(),info=new Map(),Wtr=[],Ltr=[];r.trades.forEach((x,i)=>{const k=tkey(x);map.set(k,x);let hi=-1e18,lo=1e18;for(let j=x.ei;j<=x.xi;j++){if(B.h[j]>hi)hi=B.h[j];if(B.l[j]<lo)lo=B.l[j]}
+const t={k:i+1,key:k,x,side:x.side,ei:x.ei,ep:x.ep,mfe:x.side>0?hi-x.ep:x.ep-lo,mae:x.side>0?x.ep-lo:hi-x.ep,yr:ts(B.t[Math.max(0,x.ei-1)]).slice(0,4)};info.set(k,t);
+if(x.net>0)Wtr.push(t);else if(x.net<0&&(LY==="all"||t.yr===LY))Ltr.push(t)});
+if(!Ltr.length){FX=null;fxPaint();msg("There are no losing trades in this view to fix");return}
+FX={sig:fxSig(s0),name:s0.name,base,map,info,W:Wtr.map(t=>t.key),L:Ltr.map(t=>t.key),net:r.st.net,st0:r.st,mode:FXM,scope:LY,C:[],i:0,ph:1,plan:null,costs:Ltr.map(t=>t.x.chg/(+base.qty||1))};
+FX.C=fxCands(base,pr,r,Ltr,Wtr);FXbusy=true;FXstop=false;FXON=true;const N=FX.C.length,T0=performance.now();let plan=null,pq=[],pi=0;
+const step=()=>{const t1=performance.now();
+while(!FXstop&&performance.now()-t1<40){
+if(FX.ph===1){if(FX.i>=N){FX.ph=2;pq=FX.C.filter(c=>c.e&&!c.e.hurt.length&&c.e.d>0&&c.e.fixed.size+c.e.skip.size>0).filter(c=>c.e.fixed.size>=1||c.e.skip.size>=2).sort((a,b)=>b.e.d-a.e.d).slice(0,30);plan={steps:[],s:JSON.parse(JSON.stringify(base)),e:null,net:FX.net,keys:new Set()};break}
+const c=FX.C[FX.i++];try{const s=JSON.parse(JSON.stringify(base));c.ap(s);fixM(s);c.e=fxEval(s)}catch(e){c.err=e.message}}
+else if(FX.ph===2){if(pi>=pq.length){FX.ph=3;break}const c=pq[pi++];if(plan.keys.has(c.key)||plan.steps.length>=12)continue;const s=JSON.parse(JSON.stringify(plan.s));try{c.ap(s);fixM(s);const e=fxEval(s);if(!e.hurt.length&&e.st.net>plan.net+1){plan.s=s;plan.e=e;plan.net=e.st.net;plan.steps.push(c);plan.keys.add(c.key)}}catch(e){}}
+else break}
+if(FXstop&&FX.ph<3){if(FX.ph===1){FX.C=FX.C.slice(0,FX.i)}FX.ph=3}
+if(FX.ph===3){FX.plan=plan&&plan.steps.length?plan:null;FXbusy=false;fxPaint();const p=FX.plan;msg(p?`Loss → profit plan: ${p.e.fixed.size} losing trades turn profitable, ${p.e.skip.size} are skipped, 0 winners touched · net ₹ ${fmt(FX.net)} → ₹ ${fmt(p.net)}`:"No change found that helps the losing trades without touching a winner");return}
+FX.prog=FX.ph===1?[FX.i,N,"Testing "+N+" changes, each one a full re-run of the backtest"]:[pi,pq.length,"Combining the safe changes into one plan"];const el=(performance.now()-T0)/1000;FX.eta=FX.ph===1&&FX.i>5?Math.round(el/FX.i*(N-FX.i)):0;fxPaint();setTimeout(step,0)};
+fxPaint();msg("Analysing "+Ltr.length+" losing trades…");setTimeout(step,20)}
+function fxPaint(){const e=$("#fxp");if(e)e.outerHTML=fxHTML();else if(LR)showLog(LR)}
+function fxHTML(){const cl=v=>v>=0?"u":"d",s=S[cur],LV=LT.filter(t=>t.net<0&&(LY==="all"||t.esT.slice(0,4)===LY)).length;
+const ctl=`<div class="row"><label style="flex-direction:row;align-items:center;gap:6px">Winning trades must<select id="fxm" ${FXbusy?"disabled":""}><option value="same" ${FXM==="same"?"selected":""}>stay exactly as they are (or better)</option><option value="profit" ${FXM==="profit"?"selected":""}>stay profitable</option></select></label>${FXbusy?`<button data-a="fxstop">■ Stop</button>`:`<button class="p" data-a="fxrun">▶ ${FX?"Re-analyse":"Analyse"} ${LV} losing trade${LV===1?"":"s"}${LY==="all"?"":" in "+LY}</button>`}</div>`;
+const head=`<div class="tod-h"><b>Loss → profit fixer</b>${ctl}</div><div class="mu" style="margin-bottom:10px">Tries changes to indicator settings, indicator levels in your conditions, stop loss / target / trailing stop, extra entry filters, extra exit conditions and removing conditions. Every change is checked with a full re-run of the backtest and kept only if it turns losing trades into profit (or stops them being taken) while every winning trade stays ${FXM==="same"?"with the same entry and at least the same profit":"with the same entry and still in profit"}.</div>`;
+if(!FX)return`<div class="todp" id="fxp">${head}</div>`;
+if(FXbusy){const[a,b,t]=FX.prog||[0,1,"Starting…"];return`<div class="todp" id="fxp">${head}<div class="mu">${t} · ${a} / ${b}${FX.eta?" · about "+(FX.eta>90?Math.round(FX.eta/60)+" min":FX.eta+" s")+" left":""}</div><div class="bar" style="margin-top:6px"><i class="up" style="width:${(a/Math.max(1,b)*100).toFixed(1)}%"></i></div></div>`}
+const F=FX,ok=c=>c.e&&!c.e.hurt.length&&c.e.d>0&&c.e.fixed.size+c.e.skip.size>0,lossSum=F.L.reduce((a,k)=>a+F.map.get(k).net,0),
+V=F.C.filter(c=>c.e&&c.e.fixed.size+c.e.skip.size>0&&(FXV==="all"||ok(c))).sort((a,b)=>(ok(b)-ok(a))||(ok(a)?b.e.d-a.e.d:a.e.hurt.length-b.e.hurt.length||b.e.d-a.e.d)).slice(0,60);F.V=V;
+const p=F.plan,stale=F.sig!==fxSig(s),Ls=F.L.map(k=>F.info.get(k)),cost=Ls.filter(t=>t.mfe>t.x.chg/(+F.base.qty||1)).length;
+const card=(k,v,d,c="")=>`<div><small>${k}</small><b class="${c}">${v}</b><div class="mu">${d}</div></div>`;
+let h=`<div class="todp" id="fxp">${head}${F.scope!==LY?`<div class="mu" style="margin-bottom:8px;color:var(--dn)">The results below are for losing trades in ${F.scope==="all"?"all years":F.scope}. Click Re-analyse to check the trades in ${LY==="all"?"all years":LY}.</div>`:""}${F.mode!==FXM?`<div class="mu" style="margin-bottom:8px;color:var(--dn)">The results below were checked with “winning trades must ${F.mode==="same"?"stay exactly as they are (or better)":"stay profitable"}”. Click Re-analyse to re-check them with the new setting.</div>`:""}${stale?`<div class="mu" style="margin-bottom:8px;color:var(--dn)">These results are for “${esc(F.name)}” as it was when analysed. The strategy or dates have changed since; press Re-analyse to refresh.</div>`:""}
+<div class="tod-sum">${card("Losing trades analysed",F.L.length,"₹ "+fmt(lossSum)+" lost"+(F.scope==="all"?"":" in "+F.scope),"d")}${card("Winning trades protected",F.W.length,"every winner in this run, re-checked on each test","u")}
+${p?card("Best combined plan",`${p.e.fixed.size} → profit · ${p.e.skip.size} skipped`,`${p.e.still.size} still losing · 0 winners touched · ${p.e.nw} new trade${p.e.nw===1?"":"s"} (₹ ${fmt(p.e.nwNet)})`,"u")+card("Net P&L",`₹ ${fmt(F.net)} → ₹ ${fmt(p.net)}`,`${p.net-F.net>=0?"+":"−"}₹ ${fmt(Math.abs(p.net-F.net))} · win ${F.st0.wr.toFixed(0)}% → ${p.e.st.wr.toFixed(0)}% · max DD ₹ ${fmt(F.st0.dd)} → ₹ ${fmt(p.e.st.dd)}`,cl(p.net-F.net)):card("Best combined plan","None found",`No single change helped without touching a winner. Try “stay profitable” for winners.`,"d")+card("Hint",`${cost} of ${F.L.length}`,"losing trades were in profit by more than their costs at some point")}</div>`;
+if(p)h+=`<div style="margin-bottom:12px"><b>Plan: apply these changes together</b><ol style="margin:6px 0 8px 20px;padding:0">${p.steps.map(c=>`<li><span class="mu">${c.ty}:</span> ${esc(c.lab.replace(/ \((blocks|closes) .*\)$/,""))}</li>`).join("")}</ol><button class="p" data-a="fxplan">Apply plan as a new strategy</button> <span class="mu">Opens a copy in the workbench; the original strategy is not changed. ${cost} of ${F.L.length} losing trades were in profit by more than their costs at some point.</span></div>`;
+h+=`<div class="row" style="justify-content:space-between;flex-wrap:wrap"><b style="flex:0 0 auto">Single changes that help the losing trades</b><select id="fxv" style="flex:0 0 auto"><option value="safe" ${FXV==="safe"?"selected":""}>Only changes that leave every winner untouched</option><option value="all" ${FXV==="all"?"selected":""}>All changes that help any losing trade</option></select></div>
+<div class="sc tw"><table class="todt fxt"><thead><tr><th>Type</th><th>Change</th><th>Loss → profit</th><th>Loss skipped</th><th>Winners affected</th><th>New trades</th><th>Net ₹ after</th><th>Change ₹</th><th></th></tr></thead><tbody>${V.length?V.map((c,i)=>`<tr><td class="tl">${c.ty}</td><td class="tl ch">${esc(c.lab)}</td><td class="u">${c.e.fixed.size}</td><td>${c.e.skip.size}</td><td class="${c.e.hurt.length?"d":"u"}">${c.e.hurt.length}</td><td>${c.e.nw}${c.e.nw?` <span class="${cl(c.e.nwNet)}">(₹ ${fmt(c.e.nwNet)})</span>`:""}</td><td class="${cl(c.e.st.net)}">${fmt(c.e.st.net)}</td><td class="${cl(c.e.d)}">${c.e.d>=0?"+":""}${fmt(c.e.d)}</td><td><button data-a="fxap" data-i="${i}">Apply</button></td></tr>`).join(""):`<tr><td colspan="9" class="tl mu">No change ${FXV==="safe"?"fixed a losing trade without affecting a winner. Switch to “All changes” to see near misses, or choose “stay profitable” above.":"helped any losing trade."}</td></tr>`}</tbody></table></div>
+<div class="mu" style="margin:6px 0 12px">${F.C.length} changes tested. “Loss skipped” means the new rules no longer take that losing trade. “New trades” are trades that only exist after the change; their profit or loss is already in Net ₹ after.</div>`;
+const safe=F.C.filter(ok).sort((a,b)=>b.e.d-a.e.d);
+h+=`<b>Each losing trade and what would fix it</b><div class="sc tw" style="margin-top:6px"><table class="todt fxt"><thead><tr><th>#</th><th>Side</th><th>Entry time</th><th>Reason</th><th>Net ₹</th><th title="Best open profit while the trade was running">Max profit pts</th><th title="Worst open loss while the trade was running">Max loss pts</th><th>With plan</th><th>Safe changes that fix it</th></tr></thead><tbody>${Ls.slice(0,500).map(t=>{const fx=safe.filter(c=>c.e.fixed.has(t.key)),sk=safe.filter(c=>c.e.skip.has(t.key)),pl=p?(p.e.fixed.has(t.key)?`<span class="u">profit ₹ ${fmt(p.e.fixed.get(t.key))}</span>`:p.e.skip.has(t.key)?"skipped":`<span class="d">loss ₹ ${fmt(p.e.still.get(t.key))}</span>`):"–";
+const lst=fx.slice(0,3).map(c=>"✔ "+esc(c.lab.replace(/ \((blocks|closes) .*\)$/,""))).concat(sk.slice(0,Math.max(0,3-fx.length)).map(c=>"⊘ "+esc(c.lab.replace(/ \((blocks|closes) .*\)$/,""))));
+return`<tr><td>${t.k}</td><td>${t.side>0?"Long":"Short"}</td><td class="tl">${ts(t.x.eT)}</td><td class="tl">${esc(t.x.why)}</td><td class="d">${fmt(t.x.net)}</td><td>${px2(t.mfe)}</td><td>${px2(t.mae)}</td><td class="tl">${pl}</td><td class="tl ch">${lst.length?lst.join("<br>")+(fx.length+sk.length>3?`<br><span class="mu">+${fx.length+sk.length-3} more</span>`:""):'<span class="mu">no safe change found</span>'}</td></tr>`}).join("")}</tbody></table></div>
+<div class="mu" style="margin-top:6px">✔ the trade is still taken and ends in profit · ⊘ the trade is no longer taken.${Ls.length>500?" Showing the first 500 losing trades.":""} Fixes found on past data can be curve-fitted; prefer changes that fix many trades and check them on a different date range.</div></div>`;
+return h}
+function fxApply(steps,label){if(!FX)return;const s=JSON.parse(JSON.stringify(FX.base));steps.forEach(c=>{c.ap(s);fixM(s)});delete s.tmp;s.name=FX.base.name+" · "+label;s.tmp=1;S.push(s);cur=S.length-1;base=null;live=true;render();go();msg("Loaded “"+s.name+"” in the workbench. Click 💾 Save to keep it.")}
+$("#log").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const a=b.dataset.a;
+if(a==="fix"){FXON=!FXON;showLog(LR);if(FXON)$("#fxp").scrollIntoView({behavior:"smooth",block:"start"})}else if(a==="fxrun")fxStart();else if(a==="fxstop")FXstop=true;
+else if(a==="fxplan"&&FX&&FX.plan)fxApply(FX.plan.steps,"loss fix plan");else if(a==="fxap"&&FX&&FX.V){const c=FX.V[+b.dataset.i];if(c)fxApply([c],c.lab.replace(/ \((blocks|closes) .*\)$/,"").slice(0,60))}});
+$("#log").addEventListener("change",e=>{if(e.target.id==="fxm"){FXM=e.target.value;fxPaint()}else if(e.target.id==="fxv"){FXV=e.target.value;fxPaint()}});
 $("#ind-chips").innerHTML=Object.values(NAMES).map(n=>`<span class="chip">${n}</span>`).join("");
 render();
 </script></body></html>
