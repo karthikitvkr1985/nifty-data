@@ -1,4 +1,4 @@
-"""Embed the NIFTY50_*.csv files into Nifty_Algo_Backtester26.html.
+"""Embed the NIFTY50_*.csv files into index.html.
 
 Each CSV becomes a hidden <script type="application/octet-stream" id="nd-TF" data-n=ROWS> block
 (zlib-compressed zigzag varints, base64) between the NIFTY-DATA markers; loadNifty() decodes it.
@@ -7,7 +7,7 @@ Run again after updating any CSV:  python3 embed_nifty_data.py
 import base64, os, re, zlib
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(ROOT, "Nifty_Algo_Backtester26.html")
+HTML = os.path.join(ROOT, "index.html")
 FILES = [(1, "NIFTY50_1min.csv"), (3, "NIFTY50_3min.csv"), (5, "NIFTY50_5min.csv"),
          (15, "NIFTY50_15min.csv"), (60, "NIFTY50_1hour.csv"), (1440, "NIFTY50_daily.csv")]
 
